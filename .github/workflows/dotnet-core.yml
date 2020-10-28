@@ -2,9 +2,9 @@ name: .NET Core
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches: [ main ]
   pull_request:
-    branches: [ $default-branch ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -19,5 +19,7 @@ jobs:
         dotnet-version: 3.1.301
     - name: Install dependencies
       run: dotnet restore
+      working-directory: ./FoodFite
     - name: Build
       run: dotnet build --configuration Release --no-restore
+      working-directory: ./FoodFite
