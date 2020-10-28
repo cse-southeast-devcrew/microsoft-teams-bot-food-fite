@@ -1,3 +1,6 @@
+# Created by https://www.toptal.com/developers/gitignore/api/dotnetcore,vscode
+# Edit at https://www.toptal.com/developers/gitignore?templates=dotnetcore,vscode
+
 ### DotnetCore ###
 # .NET Core build folders
 bin/
@@ -6,3 +9,8 @@ obj/
 # Common node modules locations
 /node_modules
 /wwwroot/node_modules
+
+### vscode ###
+.vscode/
+
+# End of https://www.toptal.com/developers/gitignore/api/dotnetcore,vscode
