@@ -13,4 +13,11 @@ obj/
 ### vscode ###
 .vscode/
 
+### ssh ###
+.ssh/
+
+### bot emulator ###
+bot-config
+
+
 # End of https://www.toptal.com/developers/gitignore/api/dotnetcore,vscode
