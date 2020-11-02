@@ -12,17 +12,16 @@ using Microsoft.Bot.Schema;
 
 namespace FoodFite.Bots
 {
-    public class GameBot<T> : ActivityHandler where T: Dialog
+    public class GameBot : ActivityHandler
     {
         protected readonly Dialog Dialog;
         protected readonly BotState ConversationState;
         protected readonly BotState UserState;
 
-        public GameBot(ConversationState conversationState, UserState userState, T dialog)
+        public GameBot(ConversationState conversationState, UserState userState)
         {
             ConversationState = conversationState;
             UserState = userState;
-            Dialog = dialog;
         }
 
         public override async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default)
