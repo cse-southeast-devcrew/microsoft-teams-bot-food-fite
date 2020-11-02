@@ -16,7 +16,7 @@ Reference video for [Food Fite](https://youtu.be/cpmsHO9JeCI)
 
 ### Including your SSH key for Git push
 
-You;ll basically want to add your private key to the SSH agent with `ssh-add /path/to/private_key`. [More info](https://code.visualstudio.com/docs/remote/containers#_using-ssh-keys)
+You'll basically want to add your private key to the SSH agent with `ssh-add /path/to/private_key`. [More info](https://code.visualstudio.com/docs/remote/containers#_using-ssh-keys)
 
 ## How to debug
 
