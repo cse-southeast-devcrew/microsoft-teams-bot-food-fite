@@ -34,25 +34,28 @@ namespace FoodFite
 
             // Create the Bot Framework Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithMiddleWare>();
-            
+
             // Create the storage we'll be using for User and Conversation state. (Memory is great for testing purposes.)
-            services.AddSingleton<IStorage, MemoryStorage>();
+            if (System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+                services.AddSingleton<IStorage, MemoryStorage>();
+            else
+            {
+                services.AddSingleton<IStorage>(
+                    new CosmosDbPartitionedStorage(
+                        new CosmosDbPartitionedStorageOptions
+                        {
+                            CosmosDbEndpoint = Configuration.GetValue<string>("CosmosDbEndpoint"),
+                            AuthKey = Configuration.GetValue<string>("CosmosDbAuthKey"),
+                            DatabaseId = Configuration.GetValue<string>("CosmosDbDatabaseId"),
+                            ContainerId = Configuration.GetValue<string>("CosmosDbContainerId"),
+                            CompatibilityMode = false,
+                        }
+                        )
+                    );
+            }
 
-            // services.AddSingleton<IStorage>(
-            //     new CosmosDbPartitionedStorage(
-            //         new CosmosDbPartitionedStorageOptions
-            //             {
-            //                 CosmosDbEndpoint = Configuration.GetValue<string>("CosmosDbEndpoint"),
-            //                 AuthKey = Configuration.GetValue<string>("CosmosDbAuthKey"),
-            //                 DatabaseId = Configuration.GetValue<string>("CosmosDbDatabaseId"),
-            //                 ContainerId = Configuration.GetValue<string>("CosmosDbContainerId"),
-            //                 CompatibilityMode = false,
-            //             }
-            //         )
-            //     );
-
-             // Create the User state. (Used in this bot's Dialog implementation.) ; DialogBot.cs
-            services.AddSingleton<UserState>(); 
+            // Create the User state. (Used in this bot's Dialog implementation.) ; DialogBot.cs
+            services.AddSingleton<UserState>();
 
             // Create the Conversation state. (Used by the Dialog system itself.) ; DialogBot.cs
             services.AddSingleton<ConversationState>();
