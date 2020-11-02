@@ -12,6 +12,10 @@ namespace FoodFite.Models
     {
 
         public string Name { get; set; }
+        
+        public string Opponent { get; set; }
+
+        public string Weapon { get; set; }
 
     }
 }
