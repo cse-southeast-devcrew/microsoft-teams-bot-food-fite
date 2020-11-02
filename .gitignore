@@ -13,6 +13,9 @@ obj/
 ### vscode ###
 .vscode/
 
+### keeper of secrets
+appsettings.json
+
 ### ssh ###
 .ssh/
 
