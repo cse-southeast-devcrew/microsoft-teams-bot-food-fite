@@ -60,7 +60,7 @@ namespace FoodFite
             services.AddSingleton<UserProfileDialog>();
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
-            services.AddTransient<IBot, GameBot<UserProfileDialog>>();
+            services.AddTransient<IBot, FightBot>();
 
         }
 
