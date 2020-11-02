@@ -10,8 +10,11 @@ using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using FoodFite.Bots;
+using FoodFite.Dialogs;
+using FoodFite.Models;
 
-namespace EmptyBot
+namespace FoodFite
 {
     public class Startup
     {
@@ -43,7 +46,7 @@ namespace EmptyBot
             services.AddSingleton<UserProfileDialog>();
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
-            services.AddTransient<IBot, EmptyBot<UserProfileDialog>>();
+            services.AddTransient<IBot, GameBot<UserProfileDialog>>();
 
         }
 

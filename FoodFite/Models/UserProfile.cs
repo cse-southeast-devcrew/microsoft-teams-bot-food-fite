@@ -3,7 +3,7 @@
 
 using Microsoft.Bot.Schema;
 
-namespace EmptyBot
+namespace FoodFite.Models
 {
     /// <summary>
     /// This is our application state. Just a regular serializable .NET class.

@@ -10,8 +10,9 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Connector;
 using Microsoft.Bot.Schema;
+using FoodFite.Models;
 
-namespace EmptyBot
+namespace FoodFite.Dialogs
 {
     public class UserProfileDialog : ComponentDialog
     {
