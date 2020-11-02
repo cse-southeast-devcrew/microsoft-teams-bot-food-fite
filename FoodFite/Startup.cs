@@ -6,6 +6,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,7 +35,20 @@ namespace FoodFite
             services.AddSingleton<IBotFrameworkHttpAdapter, BotFrameworkHttpAdapter>();
             
             // Create the storage we'll be using for User and Conversation state. (Memory is great for testing purposes.)
-            services.AddSingleton<IStorage, MemoryStorage>();
+            //services.AddSingleton<IStorage, MemoryStorage>();
+
+            services.AddSingleton<IStorage>(
+                new CosmosDbPartitionedStorage(
+                    new CosmosDbPartitionedStorageOptions
+                        {
+                            CosmosDbEndpoint = Configuration.GetValue<string>("CosmosDbEndpoint"),
+                            AuthKey = Configuration.GetValue<string>("CosmosDbAuthKey"),
+                            DatabaseId = Configuration.GetValue<string>("CosmosDbDatabaseId"),
+                            ContainerId = Configuration.GetValue<string>("CosmosDbContainerId"),
+                            CompatibilityMode = false,
+                        }
+                    )
+                );
 
              // Create the User state. (Used in this bot's Dialog implementation.) ; DialogBot.cs
             services.AddSingleton<UserState>(); 
