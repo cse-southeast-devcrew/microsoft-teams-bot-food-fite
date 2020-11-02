@@ -13,7 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FoodFite.Bots;
 using FoodFite.Dialogs;
-using FoodFite.Models;
+using FoodFite.Middleware;
+using FoodFite.Adapters;
 
 namespace FoodFite
 {
@@ -32,23 +33,23 @@ namespace FoodFite
             services.AddControllers().AddNewtonsoftJson();
 
             // Create the Bot Framework Adapter with error handling enabled.
-            services.AddSingleton<IBotFrameworkHttpAdapter, BotFrameworkHttpAdapter>();
+            services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithMiddleWare>();
             
             // Create the storage we'll be using for User and Conversation state. (Memory is great for testing purposes.)
-            //services.AddSingleton<IStorage, MemoryStorage>();
+            services.AddSingleton<IStorage, MemoryStorage>();
 
-            services.AddSingleton<IStorage>(
-                new CosmosDbPartitionedStorage(
-                    new CosmosDbPartitionedStorageOptions
-                        {
-                            CosmosDbEndpoint = Configuration.GetValue<string>("CosmosDbEndpoint"),
-                            AuthKey = Configuration.GetValue<string>("CosmosDbAuthKey"),
-                            DatabaseId = Configuration.GetValue<string>("CosmosDbDatabaseId"),
-                            ContainerId = Configuration.GetValue<string>("CosmosDbContainerId"),
-                            CompatibilityMode = false,
-                        }
-                    )
-                );
+            // services.AddSingleton<IStorage>(
+            //     new CosmosDbPartitionedStorage(
+            //         new CosmosDbPartitionedStorageOptions
+            //             {
+            //                 CosmosDbEndpoint = Configuration.GetValue<string>("CosmosDbEndpoint"),
+            //                 AuthKey = Configuration.GetValue<string>("CosmosDbAuthKey"),
+            //                 DatabaseId = Configuration.GetValue<string>("CosmosDbDatabaseId"),
+            //                 ContainerId = Configuration.GetValue<string>("CosmosDbContainerId"),
+            //                 CompatibilityMode = false,
+            //             }
+            //         )
+            //     );
 
              // Create the User state. (Used in this bot's Dialog implementation.) ; DialogBot.cs
             services.AddSingleton<UserState>(); 
@@ -56,11 +57,10 @@ namespace FoodFite
             // Create the Conversation state. (Used by the Dialog system itself.) ; DialogBot.cs
             services.AddSingleton<ConversationState>();
 
-            // The Dialog that will be run by the bot.
-            services.AddSingleton<UserProfileDialog>();
+            services.AddSingleton<CommandMiddleware>();
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
-            services.AddTransient<IBot, GameBot<UserProfileDialog>>();
+            services.AddTransient<IBot, GameBot>();
 
         }
 
