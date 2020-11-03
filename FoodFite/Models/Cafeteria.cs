@@ -3,7 +3,7 @@ namespace FoodFite.Models
     using System;
     using System.Collections.Generic;
 
-    class Cafeteria
+    public class Cafeteria
     {
         
         private List<String> _users = new List<String>() {"Bubba", "Kyle", "Kurt"};
