@@ -16,12 +16,9 @@ namespace FoodFite.Models
             this._actions = new Dictionary<string, Queue<string>>();
         }
 
-        public void addUser(string name, ConversationReference conversation) {
-            _users.Add(new UserProfile(){
-                Name = name,
-                Health = 100
-            });
-            _conversation.Add(name, conversation);
+        public void addUser(UserProfile user, ConversationReference conversation) {
+            _users.Add(user);
+            _conversation.Add(user.Name, conversation);
         }
 
         public UserProfile GetUser(string username){
