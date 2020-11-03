@@ -9,8 +9,6 @@ namespace FoodFite.Models
             this.Variance = variance;
             this.Ammo = ammo;
         }
-
-        public string Name {get; set;}
         public double Damage {get; set;}
         public int MinAccuracy {get; set;}
         public int Variance{get;set;}
