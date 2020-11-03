@@ -94,19 +94,21 @@ public class FightBot : ActivityHandler
                         await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
                         //await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
                         
+                        var buttons = new List<CardAction>();
+                        foreach( Food item in profile.FoodInventory) {
+                            var action = new CardAction(ActionTypes.ImBack, item.Name, value: item.Name);
+                            buttons.Add(action);
+                        }
+
                         var weaponcard = new HeroCard
                         {
                             Title = "Choose your weapon",
+                            Buttons = buttons
                             //Text = @"Let's get started. What is your name?",
                             //Images = new List<CardImage>() { new CardImage("https://aka.ms/bf-welcome-card-image") },
 
                             // need to grab foods from userprofiles food list and display here
-                            Buttons = new List<CardAction>()
-                            {
-                                new CardAction(ActionTypes.ImBack, "Banana", value: "Banana"),
-                                new CardAction(ActionTypes.ImBack, "Jello", value: "Jello"),
-                                new CardAction(ActionTypes.ImBack, "Pizza", value: "Pizza"),
-                            }
+
                         };
 
                         var weaponresponse = MessageFactory.Attachment(weaponcard.ToAttachment());
