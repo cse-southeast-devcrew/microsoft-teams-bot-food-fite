@@ -25,7 +25,6 @@ public class FightBot : ActivityHandler
     {
         private readonly BotState _userState;
         private readonly BotState _conversationState;
-        private readonly IStatePropertyAccessor<UserProfile> _userProfileAccessor;
         private readonly Cafeteria _cafeteria;
 
         private readonly IBotFrameworkHttpAdapter _adapter;
@@ -77,9 +76,9 @@ public class FightBot : ActivityHandler
                         await turnContext.SendActivityAsync($"Hi {profile.Name}.", null, null, cancellationToken);
 
                         var buttons = new List<CardAction>();
-                        foreach(string username in _cafeteria._users) {
-                            if(username != profile.Name) {
-                                var action = new CardAction(ActionTypes.ImBack, username, value: username);
+                        foreach(UserProfile username in _cafeteria._users) {
+                            if(username.Name != profile.Name) {
+                                var action = new CardAction(ActionTypes.ImBack, username.Name, value: username);
                                 buttons.Add(action);
                             }
                         }
@@ -103,13 +102,13 @@ public class FightBot : ActivityHandler
                 case ConversationFlow.Question.Opponent:
                     if (ValidateName(input, out var opponent, out message))
                     {
-                        profile.Opponent = opponent;
+                        profile.Opponent = _cafeteria.GetUser(opponent);
                         //we need to find a way to not attach the opponent to the profile, prevents multiple fights at once.
-                        await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
+                        await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent.Name}.", null, null, cancellationToken);
                         await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
                         
                         var buttons = new List<CardAction>();
-                        foreach( Food item in profile.Inventory) {
+                        foreach( Food item in profile.ListFood()) {
                             var action = new CardAction(ActionTypes.ImBack, item.Name, value: item.Name);
                             buttons.Add(action);
                         }
@@ -135,16 +134,30 @@ public class FightBot : ActivityHandler
                 case ConversationFlow.Question.Weapon:
                     if (ValidateName(input, out var weapon, out message))
                     {
-                        profile.Weapon = weapon;
+                        profile.Weapon = profile.FoodMap[weapon];
+                        int damage = (int)(profile.ThrowFood(profile.FoodMap[weapon], profile.Opponent));
                         //we need to find a way to not attach the weapon to the profile, prevents multiple fights at once.
-                        await turnContext.SendActivityAsync($"You choose to attack {profile.Opponent}.");
-                        await turnContext.SendActivityAsync($"Using the {profile.Weapon}.");
-                        await turnContext.SendActivityAsync($"Type anything to run the bot again.");
+                        await turnContext.SendActivityAsync($"You threw a {profile.Weapon.Name} at {profile.Opponent.Name} and dealt {damage}.");
+                        
+                        var buttons = new List<CardAction>();
+                        foreach(UserProfile username in _cafeteria._users) {
+                            if(username.Name != profile.Name) {
+                                var action = new CardAction(ActionTypes.ImBack, username.Name, value: username);
+                                buttons.Add(action);
+                            }
+                        }
 
-                        await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer , default(CancellationToken));
+                        var userCards = new HeroCard
+                        {
+                            Title = "Whom do you wish to fight?",
+                            Buttons = buttons
+                        };
+                        var fightresponse = MessageFactory.Attachment(userCards.ToAttachment());
+                        await turnContext.SendActivityAsync(fightresponse, cancellationToken);
 
+                        await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent.Name], notifyPlayer , default(CancellationToken));
 
-                        flow.LastQuestionAsked = ConversationFlow.Question.None;
+                        flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                         
                         profile = new UserProfile();
                         break;
