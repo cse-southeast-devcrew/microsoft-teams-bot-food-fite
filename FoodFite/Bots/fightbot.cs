@@ -94,8 +94,8 @@ public class FightBot : ActivityHandler
                 case ConversationFlow.Question.Opponent:
                     if (ValidateName(input, out var opponent, out message))
                     {
-                        profile.Opponent = opponent;
-                        await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
+                        //profile.Opponent = opponent;
+                        //await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
                         //await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
                         
                         var buttons = new List<CardAction>();
@@ -130,12 +130,12 @@ public class FightBot : ActivityHandler
                 case ConversationFlow.Question.Weapon:
                     if (ValidateName(input, out var weapon, out message))
                     {
-                        profile.Weapon = weapon;
-                        await turnContext.SendActivityAsync($"You choose to attack {profile.Opponent}.");
-                        await turnContext.SendActivityAsync($"Using the {profile.Weapon}.");
+                        //profile.Weapon = weapon;
+                        //await turnContext.SendActivityAsync($"You choose to attack {profile.Opponent}.");
+                        //await turnContext.SendActivityAsync($"Using the {profile.Weapon}.");
                         await turnContext.SendActivityAsync($"Type anything to run the bot again.");
 
-                        await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer , default(CancellationToken));
+                        //await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer , default(CancellationToken));
 
 
                         flow.LastQuestionAsked = ConversationFlow.Question.None;
