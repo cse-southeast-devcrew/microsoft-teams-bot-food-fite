@@ -29,6 +29,14 @@ public class FightBot : ActivityHandler
         private readonly Cafeteria _cafeteria;
 
         private readonly IBotFrameworkHttpAdapter _adapter;
+
+                // Messages sent to the user.
+        private const string WelcomeMessage = "Hack project to build a " +
+                                              "multiplayer game inspired " +
+                                              "by the Food Fight game from " +
+                                              "the days of old";
+
+     
         
         public FightBot(ConversationState conversationState, UserState userState, Cafeteria cafeteria, IBotFrameworkHttpAdapter adapter)
         {
@@ -36,6 +44,28 @@ public class FightBot : ActivityHandler
             _userState = userState;
             _cafeteria = cafeteria;
             _adapter = adapter;
+        }
+
+        protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
+        {
+            foreach (var member in membersAdded)
+            {
+                if (member.Id != turnContext.Activity.Recipient.Id)
+                {
+                    var welcomeCard = new HeroCard
+                        {
+                            Text = WelcomeMessage,
+                            Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/food-fight-blog.jpg") },
+                            Buttons = new List<CardAction>()
+                            {
+                                new CardAction(ActionTypes.ImBack, "Fight!",  value: "Fight!"),
+                            }
+                        };
+
+                    var welcomeResponse = MessageFactory.Attachment(welcomeCard.ToAttachment());
+                    await turnContext.SendActivityAsync(welcomeResponse, cancellationToken);
+                }
+            }
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
