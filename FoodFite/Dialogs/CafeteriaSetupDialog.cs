@@ -99,6 +99,8 @@ namespace FoodFite.Dialogs
                 MessageFactory.Text("Thanks for participating!"),
                 cancellationToken);
 
+            // TODO: I believe this returns the value bag to the parent dialog, next in waterfall. I think we could persist this to cosmos
+            // using the SDK (not bot state)? Should we use botstate? It's shared accross users so shouldn't be in user state.
             return await stepContext.EndDialogAsync(stepContext.Values[CAFETERIA_INFO], cancellationToken);
         }
     }
