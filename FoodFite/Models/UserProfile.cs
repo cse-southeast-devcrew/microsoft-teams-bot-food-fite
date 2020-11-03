@@ -13,11 +13,21 @@ namespace FoodFite.Models
     public class UserProfile
     {
         public string Name { get; set; }
+        public string Opponent { get; set; }
+        public string Weapon { get; set; }
         public List<Item> Inventory { get; set;}
         public double Health { get; set;}
         public Protection Clothes { get; set; }
+        public Dictionary<string, Food> FoodMap { get; set; }
+        public List<Food> FoodInventory{get; set;}
+        public Protection Protection{get; set;}
 
 
+        public UserProfile() {
+            this.FoodInventory = new List<Food>();
+            this.FoodMap = new Dictionary<string, Food>();
+        }
+        
         public List<Item> ListFood(){
             return Inventory.Where(x => x.Throwable == true).ToList<Item>();
         }
@@ -59,12 +69,6 @@ namespace FoodFite.Models
 
             return damageDone;
         }
-
-        public Dictionary<string, Food> FoodMap { get; set; }
-
-        public List<Food> FoodInventory{get; set;}
-
-        public Protection Protection{get; set;}
 
         public void addFood(Food food) {
             if(FoodMap.ContainsKey(food.Name)) {

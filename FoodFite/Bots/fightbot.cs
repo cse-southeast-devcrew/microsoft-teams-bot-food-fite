@@ -70,18 +70,18 @@ public class FightBot : ActivityHandler
                     if (ValidateName(input, out var name, out message))
                     {
                         profile.Name = name;
-                        profile.FoodInventory.Add((Food)ItemFactory.BananaFactory());
-                        profile.FoodInventory.Add((Food)ItemFactory.GrapeFactory());
-                        profile.FoodInventory.Add((Food)ItemFactory.JelloFactory());
+                        profile.addFood((Food)ItemFactory.BananaFactory());
+                        profile.addFood((Food)ItemFactory.GrapeFactory());
+                        profile.addFood((Food)ItemFactory.JelloFactory());
                         _cafeteria.addUser(profile.Name, turnContext.Activity.GetConversationReference());
                         await turnContext.SendActivityAsync($"Hi {profile.Name}.", null, null, cancellationToken);
-                        string test = "\n";
+                        string foodFighters = "\n";
                         foreach(string username in _cafeteria._users) {
                             if(username != profile.Name) {
-                                test += $"{username} \n";
+                                foodFighters += $"{username} \n";
                             }
                         }
-                        await turnContext.SendActivityAsync($"Whom do you wish to fight? {test}", null, null, cancellationToken);
+                        await turnContext.SendActivityAsync($"Whom do you wish to fight? {foodFighters}", null, null, cancellationToken);
                         await turnContext.SendActivityAsync("Whom do you wish to challenge to a fight?", null, null, cancellationToken);
                         flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                         break;
@@ -94,9 +94,9 @@ public class FightBot : ActivityHandler
                 case ConversationFlow.Question.Opponent:
                     if (ValidateName(input, out var opponent, out message))
                     {
-                        //profile.Opponent = opponent;
-                        //await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
-                        //await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
+                        profile.Opponent = opponent;
+                        await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
+                        await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
                         
                         var buttons = new List<CardAction>();
                         foreach( Food item in profile.FoodInventory) {
@@ -108,11 +108,6 @@ public class FightBot : ActivityHandler
                         {
                             Title = "Choose your weapon",
                             Buttons = buttons
-                            //Text = @"Let's get started. What is your name?",
-                            //Images = new List<CardImage>() { new CardImage("https://aka.ms/bf-welcome-card-image") },
-
-                            // need to grab foods from userprofiles food list and display here
-
                         };
 
                         var weaponresponse = MessageFactory.Attachment(weaponcard.ToAttachment());
@@ -130,12 +125,12 @@ public class FightBot : ActivityHandler
                 case ConversationFlow.Question.Weapon:
                     if (ValidateName(input, out var weapon, out message))
                     {
-                        //profile.Weapon = weapon;
-                        //await turnContext.SendActivityAsync($"You choose to attack {profile.Opponent}.");
-                        //await turnContext.SendActivityAsync($"Using the {profile.Weapon}.");
+                        profile.Weapon = weapon;
+                        await turnContext.SendActivityAsync($"You choose to attack {profile.Opponent}.");
+                        await turnContext.SendActivityAsync($"Using the {profile.Weapon}.");
                         await turnContext.SendActivityAsync($"Type anything to run the bot again.");
 
-                        //await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer , default(CancellationToken));
+                        await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer , default(CancellationToken));
 
 
                         flow.LastQuestionAsked = ConversationFlow.Question.None;
