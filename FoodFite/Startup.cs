@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FoodFite.Bots;
 using FoodFite.Dialogs;
+using FoodFite.Models;
 
 namespace FoodFite
 {
@@ -71,6 +72,8 @@ namespace FoodFite
                     services.AddTransient<IBot, FightBot>();
                     break;
             }
+
+            services.AddSingleton<Cafeteria>();
 
         }
 
