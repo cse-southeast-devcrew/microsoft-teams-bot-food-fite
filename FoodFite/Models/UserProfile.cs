@@ -22,9 +22,9 @@ namespace FoodFite.Models
 
         public string Weapon { get; set; }
 
-        private Dictionary<string, Food> FoodMap { get; set; }
+        public Dictionary<string, Food> FoodMap { get; set; }
 
-        private List<Food> FoodInventory{get; set;}
+        public List<Food> FoodInventory{get; set;}
 
         public Protection Protection{get; set;}
 
