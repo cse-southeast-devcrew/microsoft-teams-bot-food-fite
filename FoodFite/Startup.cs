@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FoodFite.Bots;
 using FoodFite.Dialogs;
+using FoodFite.Models;
 
 namespace FoodFite
 {
@@ -53,10 +54,12 @@ namespace FoodFite
             // Create the User state. (Used in this bot's Dialog implementation.) ; DialogBot.cs
             services.AddSingleton<UserState>();
 
+            services.AddSingleton<Cafeteria>();
+
             // Create the Conversation state. (Used by the Dialog system itself.) ; DialogBot.cs
             services.AddSingleton<ConversationState>();
 
-            var botType = Environment.GetEnvironmentVariable("BOT_TYPE");
+            var botType = "fitebot";
 
             switch (botType.ToLower())
             {

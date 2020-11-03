@@ -23,17 +23,21 @@ public class FightBot : ActivityHandler
     {
         private readonly BotState _userState;
         private readonly BotState _conversationState;
+        private readonly IStatePropertyAccessor<UserProfile> _userProfileAccessor;
+        private readonly Cafeteria _cafeteria;
         
-        public FightBot(ConversationState conversationState, UserState userState)
+        public FightBot(ConversationState conversationState, UserState userState, Cafeteria cafeteria)
         {
             _conversationState = conversationState;
             _userState = userState;
+            _cafeteria = cafeteria;
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
            
             var conversationStateAccessors = _conversationState.CreateProperty<ConversationFlow>(nameof(ConversationFlow));
+            //turnContext.Activity.GetConversationReference
             var flow = await conversationStateAccessors.GetAsync(turnContext, () => new ConversationFlow(), cancellationToken);
 
             var userStateAccessors = _userState.CreateProperty<UserProfile>(nameof(UserProfile));
@@ -46,7 +50,7 @@ public class FightBot : ActivityHandler
             await _userState.SaveChangesAsync(turnContext, false, cancellationToken);
         }
 
-        private static async Task FillOutUserProfileAsync(ConversationFlow flow, UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
+        private async Task FillOutUserProfileAsync(ConversationFlow flow, UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
         {
             var input = turnContext.Activity.Text?.Trim();
             string message;
@@ -60,9 +64,15 @@ public class FightBot : ActivityHandler
                 case ConversationFlow.Question.Name:
                     if (ValidateName(input, out var name, out message))
                     {
+                        _cafeteria.addUser(profile.Name, turnContext.Activity.GetConversationReference());
+                        _cafeteria._users.Add(profile.Name);
                         profile.Name = name;
                         await turnContext.SendActivityAsync($"Hi {profile.Name}.", null, null, cancellationToken);
-                        await turnContext.SendActivityAsync("Whom do you wish to fight?", null, null, cancellationToken);
+                        string test = "\n";
+                        foreach(string username in _cafeteria._users) {
+                            test += $"{username} \n";
+                        }
+                        await turnContext.SendActivityAsync($"Whom do you wish to fight? {test}", null, null, cancellationToken);
                         flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                         break;
                     }
