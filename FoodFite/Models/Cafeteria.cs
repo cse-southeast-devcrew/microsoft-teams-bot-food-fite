@@ -9,9 +9,11 @@ namespace FoodFite.Models
 
         public List<UserProfile> _users;
         public Dictionary<string, ConversationReference> _conversation;
+        public Dictionary<string, Queue<string>> _actions;
         public Cafeteria() {
             this._users = new List<UserProfile>();
             this._conversation = new Dictionary<string, ConversationReference>();
+            this._actions = new Dictionary<string, Queue<string>>();
         }
 
         public void addUser(string name, ConversationReference conversation) {
