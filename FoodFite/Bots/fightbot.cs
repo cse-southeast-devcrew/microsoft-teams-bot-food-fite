@@ -109,7 +109,7 @@ public class FightBot : ActivityHandler
                         await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
                         
                         var buttons = new List<CardAction>();
-                        foreach( Food item in profile.FoodInventory) {
+                        foreach( Food item in profile.Inventory) {
                             var action = new CardAction(ActionTypes.ImBack, item.Name, value: item.Name);
                             buttons.Add(action);
                         }
