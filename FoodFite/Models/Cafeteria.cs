@@ -3,7 +3,7 @@ namespace FoodFite.Models
     using System;
     using Newtonsoft.Json;
 
-    public class Cafeteria
+    public class Cafeteria : IStateModel
     {
         [JsonProperty("id")]
         public string Id

@@ -7,6 +7,7 @@ namespace FoodFite.Dialogs
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Builder.Dialogs;
     using Microsoft.Extensions.Configuration;
+    using FoodFite.Models;
 
     class StartDialog : ComponentDialog
     {
@@ -16,7 +17,7 @@ namespace FoodFite.Dialogs
         {
             _userState = userState;
 
-            AddDialog(new CafeteriaSetupDialog(new GameStateProvider(configuration)));
+            AddDialog(new CafeteriaSetupDialog(new StateProvider<Cafeteria>(configuration)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
                 InitialStateSetupAsync,

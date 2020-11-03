@@ -13,11 +13,11 @@ namespace FoodFite.Dialogs
     class CafeteriaSetupDialog : ComponentDialog
     {
         private const string CAFETERIA_INFO = "value-cafeteriaInfo";
-        private readonly GameStateProvider _gameStateProvider;
+        private readonly StateProvider<Cafeteria> _stateProvider;
 
-        public CafeteriaSetupDialog(GameStateProvider gameStateProvider) : base(nameof(CafeteriaSetupDialog))
+        public CafeteriaSetupDialog(StateProvider<Cafeteria> stateProvider) : base(nameof(CafeteriaSetupDialog))
         {
-            _gameStateProvider = gameStateProvider;
+            _stateProvider = stateProvider;
 
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new NumberPrompt<int>(nameof(NumberPrompt<int>)));
@@ -104,7 +104,7 @@ namespace FoodFite.Dialogs
                 MessageFactory.Text("Thanks for participating!"),
                 cancellationToken);
 
-            var result = await _gameStateProvider.SaveCafeteriaAsync(cafeteria);
+            var result = await _stateProvider.SaveAsync(cafeteria);
 
             if (result == null)
                 throw new NullReferenceException("Something happened writing to database"); // TODO: do something different here

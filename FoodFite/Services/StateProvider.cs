@@ -7,14 +7,14 @@ namespace FoodFite.Services
     using System.Threading.Tasks;
     using FoodFite.Models;
 
-    public class GameStateProvider
+    public class StateProvider<T> where T: IStateModel
     {
-        private readonly CosmosClient _client;
-        private readonly string _cosmosEndpointUri;
-        private readonly string _cosmosPrimaryKey;
-        private readonly IConfiguration _configuration;
+        protected readonly CosmosClient _client;
+        protected readonly string _cosmosEndpointUri;
+        protected readonly string _cosmosPrimaryKey;
+        protected readonly IConfiguration _configuration;
 
-        public GameStateProvider(IConfiguration configuration)
+        public StateProvider(IConfiguration configuration)
         {
             _configuration = configuration;
             _cosmosEndpointUri = _configuration.GetValue<string>(EnvironmentConstants.CosmosEndpoint);
@@ -22,23 +22,23 @@ namespace FoodFite.Services
             _client = new CosmosClient(_cosmosEndpointUri, _cosmosPrimaryKey);
         }
 
-        public async Task<ItemResponse<Cafeteria>> SaveCafeteriaAsync(Cafeteria cafeteria)
+        public async Task<ItemResponse<T>> SaveAsync(T stateItem)
         {
-            ItemResponse<Cafeteria> cafeteriaResponse = null;
+            ItemResponse<T> stateItemResponse = null;
 
             try
             {
                 var container = _client.GetContainer(
                     _configuration.GetValue<string>(EnvironmentConstants.CosmosDatabaseId),
                     _configuration.GetValue<string>(EnvironmentConstants.CosmosContainerId));
-                cafeteriaResponse = await container.UpsertItemAsync<Cafeteria>(item: cafeteria, partitionKey: new PartitionKey(cafeteria.Id));
+                stateItemResponse = await container.UpsertItemAsync<T>(item: stateItem, partitionKey: new PartitionKey(stateItem.Id));
             }
             catch (System.Exception up)
             {
                 throw up;
             }
 
-            return cafeteriaResponse;
+            return stateItemResponse;
         }
     }
 }

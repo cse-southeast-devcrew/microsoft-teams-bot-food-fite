@@ -60,19 +60,8 @@ namespace FoodFite
 
             var botType = Environment.GetEnvironmentVariable(EnvironmentConstants.BotType);
 
-            switch (botType)
-            {
-                case EnvironmentConstants.BotTypeValueFiteBot:
-                    services.AddTransient<IBot, FightBot>();
-                    break;
-                case EnvironmentConstants.BotTypeValueGameBot: // Ian's attempt at thinking, probably wrong as usual.
-                    services.AddSingleton<StartDialog>();
-                    services.AddTransient<IBot, GameBot<StartDialog>>();
-                    break;
-                default:
-                    services.AddTransient<IBot, FightBot>();
-                    break;
-            }
+            services.AddSingleton<StartDialog>();
+            services.AddTransient<IBot, GameBot<StartDialog>>();
 
         }
 
