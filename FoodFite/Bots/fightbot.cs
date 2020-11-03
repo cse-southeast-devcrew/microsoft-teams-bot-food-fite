@@ -14,6 +14,7 @@ using Microsoft.Recognizers.Text;
 using Microsoft.Recognizers.Text.DateTime;
 using Microsoft.Recognizers.Text.Number;
 using FoodFite.Models;
+using FoodFite.Factories;
 
 namespace FoodFite.Bots
 {
@@ -69,6 +70,9 @@ public class FightBot : ActivityHandler
                     if (ValidateName(input, out var name, out message))
                     {
                         profile.Name = name;
+                        profile.FoodInventory.Add((Food)ItemFactory.BananaFactory());
+                        profile.FoodInventory.Add((Food)ItemFactory.GrapeFactory());
+                        profile.FoodInventory.Add((Food)ItemFactory.JelloFactory());
                         _cafeteria.addUser(profile.Name, turnContext.Activity.GetConversationReference());
                         await turnContext.SendActivityAsync($"Hi {profile.Name}.", null, null, cancellationToken);
                         string test = "\n";
