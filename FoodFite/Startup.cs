@@ -36,23 +36,20 @@ namespace FoodFite
             services.AddSingleton<IBotFrameworkHttpAdapter, BotFrameworkHttpAdapter>();
 
             // Create the storage we'll be using for User and Conversation state. (Memory is great for testing purposes.)
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-                services.AddSingleton<IStorage, MemoryStorage>();
-            else
-            {
-                services.AddSingleton<IStorage>(
-                new CosmosDbPartitionedStorage(
-                    new CosmosDbPartitionedStorageOptions
-                    {
-                        CosmosDbEndpoint = Configuration.GetValue<string>("CosmosDbEndpoint"),
-                        AuthKey = Configuration.GetValue<string>("CosmosDbAuthKey"),
-                        DatabaseId = Configuration.GetValue<string>("CosmosDbDatabaseId"),
-                        ContainerId = Configuration.GetValue<string>("CosmosDbContainerId"),
-                        CompatibilityMode = false,
-                    }
-                    )
-                );
-            }
+            // services.AddSingleton<IStorage, MemoryStorage>();
+            
+            services.AddSingleton<IStorage>(
+            new CosmosDbPartitionedStorage(
+                new CosmosDbPartitionedStorageOptions
+                {
+                    CosmosDbEndpoint = Configuration.GetValue<string>("CosmosDbEndpoint"),
+                    AuthKey = Configuration.GetValue<string>("CosmosDbAuthKey"),
+                    DatabaseId = Configuration.GetValue<string>("CosmosDbDatabaseId"),
+                    ContainerId = Configuration.GetValue<string>("CosmosDbContainerId"),
+                    CompatibilityMode = false,
+                }
+                )
+            );
 
             // Create the User state. (Used in this bot's Dialog implementation.) ; DialogBot.cs
             services.AddSingleton<UserState>();
@@ -60,11 +57,21 @@ namespace FoodFite
             // Create the Conversation state. (Used by the Dialog system itself.) ; DialogBot.cs
             services.AddSingleton<ConversationState>();
 
-            // The Dialog that will be run by the bot.
-            services.AddSingleton<StartDialog>();
+            var botType = Environment.GetEnvironmentVariable("BOT_TYPE");
 
-            // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
-            services.AddTransient<IBot, GameBot<StartDialog>>();
+            switch (botType.ToLower())
+            {
+                case "fitebot":
+                    services.AddTransient<IBot, FightBot>();
+                    break;
+                case "gamebot": // Ian's attempt at thinking, probably wrong as usual.
+                    services.AddSingleton<StartDialog>();
+                    services.AddTransient<IBot, GameBot<StartDialog>>();
+                    break;
+                default:
+                    services.AddTransient<IBot, FightBot>();
+                    break;
+            }
 
             services.AddSingleton<Cafeteria>();
 
