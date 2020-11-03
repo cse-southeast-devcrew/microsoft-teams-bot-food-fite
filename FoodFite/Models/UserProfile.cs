@@ -13,8 +13,8 @@ namespace FoodFite.Models
     public class UserProfile
     {
         public string Name { get; set; }
-        public string Opponent { get; set; }
-        public string Weapon { get; set; }
+        public UserProfile Opponent { get; set; }
+        public Food Weapon { get; set; }
         public List<Item> Inventory { get; set;}
         public double Health { get; set;}
         public Protection Clothes { get; set; }
@@ -59,7 +59,7 @@ namespace FoodFite.Models
             
             double damageDone = (Clothes == null) ? damage : Clothes.TakeDamage(damage, 0);
             
-            if(Clothes.isBroken()){
+            if(Clothes != null && Clothes.isBroken()){
                 Clothes = null;
             }
 
