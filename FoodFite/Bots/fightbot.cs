@@ -25,7 +25,7 @@ public class FightBot : ActivityHandler
     {
         private readonly BotState _userState;
         private readonly BotState _conversationState;
-        private readonly IStatePropertyAccessor<UserProfile> _userProfileAccessor;
+        private IStatePropertyAccessor<UserProfile> _userProfileAccessor;
         private readonly Cafeteria _cafeteria;
 
         private readonly IBotFrameworkHttpAdapter _adapter;
@@ -45,8 +45,8 @@ public class FightBot : ActivityHandler
             //turnContext.Activity.GetConversationReference
             var flow = await conversationStateAccessors.GetAsync(turnContext, () => new ConversationFlow(), cancellationToken);
 
-            var userStateAccessors = _userState.CreateProperty<UserProfile>(nameof(UserProfile));
-            var profile = await userStateAccessors.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
+            _userProfileAccessor = _userState.CreateProperty<UserProfile>(nameof(UserProfile));
+            var profile = await _userProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
 
             await FillOutUserProfileAsync(flow, profile, turnContext, cancellationToken);
 
@@ -141,8 +141,15 @@ public class FightBot : ActivityHandler
                         await turnContext.SendActivityAsync($"Using the {profile.Weapon}.");
                         await turnContext.SendActivityAsync($"Type anything to run the bot again.");
 
+                        Queue<string> actionQueue;
+                        if(!_cafeteria._actions.ContainsKey(profile.Opponent)) {
+                            actionQueue = new Queue<string>();
+                            _cafeteria._actions.Add(profile.Opponent, actionQueue);
+                        } else {
+                            actionQueue = _cafeteria._actions[profile.Opponent];
+                        }
+                        actionQueue.Enqueue("did some damage");
                         await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer , default(CancellationToken));
-
 
                         flow.LastQuestionAsked = ConversationFlow.Question.None;
                         
@@ -157,8 +164,9 @@ public class FightBot : ActivityHandler
             }
         }
 
-        private  async Task notifyPlayer(ITurnContext context, CancellationToken token) {
-            await context.SendActivityAsync("you were attacked");
+        private async Task notifyPlayer(ITurnContext context, CancellationToken token) {
+            var profile = await _userProfileAccessor.GetAsync(context, () => new UserProfile(), token);
+            await context.SendActivityAsync(_cafeteria._actions[profile.Name].Dequeue());
         }
 
         private static bool ValidateName(string input, out string name, out string message)
