@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FoodFite.Bots;
 using FoodFite.Dialogs;
+using FoodFite.Models;
 
 namespace FoodFite
 {
@@ -64,6 +65,8 @@ namespace FoodFite
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
             services.AddTransient<IBot, GameBot<StartDialog>>();
+
+            services.AddSingleton<Cafeteria>();
 
         }
 
