@@ -52,7 +52,7 @@ namespace FoodFite.Dialogs
                         MessageFactory.Text("On to the next thing..."),
                         cancellationToken);
                     // return await stepContext.NextAsync(new List<string>(), cancellationToken);
-                    return await stepContext.EndDialogAsync(cancellationToken);
+                    return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
                 case "yes":
                     var prompt = new PromptOptions { Prompt = MessageFactory.Text("Please enter the cafeteria's name.") };
                     return await stepContext.PromptAsync(nameof(TextPrompt), prompt, cancellationToken);
