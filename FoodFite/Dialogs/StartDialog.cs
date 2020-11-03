@@ -2,18 +2,20 @@ namespace FoodFite.Dialogs
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using FoodFite.Services;
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Builder.Dialogs;
+    using Microsoft.Extensions.Configuration;
 
     class StartDialog : ComponentDialog
     {
         private readonly UserState _userState;
 
-        public StartDialog(UserState userState) : base(nameof(StartDialog))
+        public StartDialog(UserState userState, IConfiguration configuration) : base(nameof(StartDialog))
         {
             _userState = userState;
 
-            AddDialog(new CafeteriaSetupDialog());
+            AddDialog(new CafeteriaSetupDialog(new GameStateProvider(configuration)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
                 InitialStateSetupAsync,

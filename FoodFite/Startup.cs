@@ -13,7 +13,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FoodFite.Bots;
+using FoodFite.Utils;
 using FoodFite.Dialogs;
+using FoodFite.Services;
 
 namespace FoodFite
 {
@@ -41,10 +43,10 @@ namespace FoodFite
             new CosmosDbPartitionedStorage(
                 new CosmosDbPartitionedStorageOptions
                 {
-                    CosmosDbEndpoint = Configuration.GetValue<string>("CosmosDbEndpoint"),
-                    AuthKey = Configuration.GetValue<string>("CosmosDbAuthKey"),
-                    DatabaseId = Configuration.GetValue<string>("CosmosDbDatabaseId"),
-                    ContainerId = Configuration.GetValue<string>("CosmosDbContainerId"),
+                    CosmosDbEndpoint = Configuration.GetValue<string>(EnvironmentConstants.CosmosEndpoint),
+                    AuthKey = Configuration.GetValue<string>(EnvironmentConstants.CosmosPrimaryKey),
+                    DatabaseId = Configuration.GetValue<string>(EnvironmentConstants.CosmosDatabaseId),
+                    ContainerId = Configuration.GetValue<string>(EnvironmentConstants.CosmosContainerId),
                     CompatibilityMode = false,
                 }
                 )
@@ -56,14 +58,14 @@ namespace FoodFite
             // Create the Conversation state. (Used by the Dialog system itself.) ; DialogBot.cs
             services.AddSingleton<ConversationState>();
 
-            var botType = Environment.GetEnvironmentVariable("BOT_TYPE");
+            var botType = Environment.GetEnvironmentVariable(EnvironmentConstants.BotType);
 
-            switch (botType.ToLower())
+            switch (botType)
             {
-                case "fitebot":
+                case EnvironmentConstants.BotTypeValueFiteBot:
                     services.AddTransient<IBot, FightBot>();
                     break;
-                case "gamebot": // Ian's attempt at thinking, probably wrong as usual.
+                case EnvironmentConstants.BotTypeValueGameBot: // Ian's attempt at thinking, probably wrong as usual.
                     services.AddSingleton<StartDialog>();
                     services.AddTransient<IBot, GameBot<StartDialog>>();
                     break;

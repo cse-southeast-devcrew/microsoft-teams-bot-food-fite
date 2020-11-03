@@ -7,13 +7,18 @@ namespace FoodFite.Dialogs
     using Microsoft.Bot.Builder.Dialogs;
     using FoodFite.Models;
     using System;
+    using FoodFite.Services;
+    using Microsoft.Extensions.Configuration;
 
     class CafeteriaSetupDialog : ComponentDialog
     {
         private const string CAFETERIA_INFO = "value-cafeteriaInfo";
+        private readonly GameStateProvider _gameStateProvider;
 
-        public CafeteriaSetupDialog() : base(nameof(CafeteriaSetupDialog))
+        public CafeteriaSetupDialog(GameStateProvider gameStateProvider) : base(nameof(CafeteriaSetupDialog))
         {
+            _gameStateProvider = gameStateProvider;
+
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new NumberPrompt<int>(nameof(NumberPrompt<int>)));
             AddDialog(new NumberPrompt<decimal>(nameof(NumberPrompt<decimal>)));
@@ -89,7 +94,7 @@ namespace FoodFite.Dialogs
             return await stepContext.PromptAsync(nameof(TextPrompt), prompt, cancellationToken);
         }
 
-        private static async Task<DialogTurnResult> AcknowledgementAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> AcknowledgementAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var cafeteria = (Cafeteria)stepContext.Values[CAFETERIA_INFO];
             // TODO: DateTime Prompt in WhatTimeToPayAsync and convert to datetime here and model
@@ -98,6 +103,11 @@ namespace FoodFite.Dialogs
             await stepContext.Context.SendActivityAsync(
                 MessageFactory.Text("Thanks for participating!"),
                 cancellationToken);
+
+            var result = await _gameStateProvider.SaveCafeteriaAsync(cafeteria);
+
+            if (result == null)
+                throw new NullReferenceException("Something happened writing to database"); // TODO: do something different here
 
             // TODO: I believe this returns the value bag to the parent dialog, next in waterfall. I think we could persist this to cosmos
             // using the SDK (not bot state)? Should we use botstate? It's shared accross users so shouldn't be in user state.
