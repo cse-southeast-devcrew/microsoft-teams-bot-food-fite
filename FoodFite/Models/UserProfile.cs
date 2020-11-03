@@ -19,15 +19,13 @@ namespace FoodFite.Models
         public double Health { get; set;}
         public Protection Clothes { get; set; }
         public Dictionary<string, Food> FoodMap { get; set; }
-        public List<Food> FoodInventory{get; set;}
-        public Protection Protection{get; set;}
 
 
         public UserProfile() {
-            this.FoodInventory = new List<Food>();
+            this.Inventory = new List<Item>();
             this.FoodMap = new Dictionary<string, Food>();
         }
-        
+
         public List<Item> ListFood(){
             return Inventory.Where(x => x.Throwable == true).ToList<Item>();
         }
@@ -75,7 +73,7 @@ namespace FoodFite.Models
                 Food mergedFood = FoodMap[food.Name];
                 mergedFood.Ammo = mergedFood.Ammo + food.Ammo;
             } else {
-                FoodInventory.Add(food);
+                Inventory.Add(food);
                 FoodMap.Add(food.Name, food);
             }
         }
