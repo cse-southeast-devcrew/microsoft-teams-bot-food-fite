@@ -23,6 +23,7 @@ namespace FoodFite.Dialogs
         {
             _userProfileAccessor = userState.CreateProperty<UserProfile>("UserProfile");
 
+            string[] array = new string[5];
             // This array defines how the Waterfall will execute.
             var waterfallSteps = new WaterfallStep[]
             {
@@ -51,7 +52,7 @@ namespace FoodFite.Dialogs
 
             // We can send messages to the user at any point in the WaterfallStep.
              await stepContext.Context.SendActivityAsync(MessageFactory.Text($"Thanks {stepContext.Result}."), cancellationToken);
-            return await stepContext.ContinueDialogAsync(cancellationToken);
+             return await stepContext.ContinueDialogAsync(cancellationToken);
         }
 
         private async Task<DialogTurnResult> SummaryStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -69,8 +70,17 @@ namespace FoodFite.Dialogs
 
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(msg), cancellationToken);
             }
-            
+
+                
+            //}
+            // else
+            // {
+            //     await stepContext.Context.SendActivityAsync(MessageFactory.Text("Thanks. Your profile will not be kept."), cancellationToken);
+            // }
+
+            // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is the end.
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
+        
     }
 }
