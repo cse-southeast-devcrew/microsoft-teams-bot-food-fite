@@ -23,11 +23,14 @@ public class FightBot : ActivityHandler
     {
         private readonly BotState _userState;
         private readonly BotState _conversationState;
+
+        private readonly Cafeteria _cafeState;
         
-        public FightBot(ConversationState conversationState, UserState userState)
+        public FightBot(ConversationState conversationState, UserState userState, Cafeteria cafeState)
         {
             _conversationState = conversationState;
             _userState = userState;
+            _cafeState = cafeState;
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
@@ -46,7 +49,7 @@ public class FightBot : ActivityHandler
             await _userState.SaveChangesAsync(turnContext, false, cancellationToken);
         }
 
-        private static async Task FillOutUserProfileAsync(ConversationFlow flow, UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
+        private async Task FillOutUserProfileAsync(ConversationFlow flow, UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
         {
             var input = turnContext.Activity.Text?.Trim();
             string message;
@@ -62,7 +65,8 @@ public class FightBot : ActivityHandler
                     {
                         profile.Name = name;
                         await turnContext.SendActivityAsync($"Hi {profile.Name}.", null, null, cancellationToken);
-                        await turnContext.SendActivityAsync("Whom do you wish to fight?", null, null, cancellationToken);
+                        await turnContext.SendActivityAsync(_cafeState.Users.Count.ToString(), null, null, cancellationToken);
+                        await turnContext.SendActivityAsync("Whom do you wish to challenge to a fight?", null, null, cancellationToken);
                         flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                         break;
                     }
@@ -76,7 +80,24 @@ public class FightBot : ActivityHandler
                     {
                         profile.Opponent = opponent;
                         await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
-                        await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
+                        //await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
+                        
+                        var weaponcard = new HeroCard
+                        {
+                            Title = "Choose your weapon",
+                            //Text = @"Let's get started. What is your name?",
+                            //Images = new List<CardImage>() { new CardImage("https://aka.ms/bf-welcome-card-image") },
+                            Buttons = new List<CardAction>()
+                            {
+                                new CardAction(ActionTypes.ImBack, "Banna", value: "Banna"),
+                                new CardAction(ActionTypes.ImBack, "Jello", value: "Jello"),
+                                new CardAction(ActionTypes.ImBack, "Pizza", value: "Pizza"),
+                            }
+                        };
+
+                        var weaponresponse = MessageFactory.Attachment(weaponcard.ToAttachment());
+                        await turnContext.SendActivityAsync(weaponresponse, cancellationToken);
+                        
                         flow.LastQuestionAsked = ConversationFlow.Question.Weapon;
                         break;
                     }
@@ -94,6 +115,7 @@ public class FightBot : ActivityHandler
                         await turnContext.SendActivityAsync($"Using the {profile.Weapon}.");
                         await turnContext.SendActivityAsync($"Type anything to run the bot again.");
                         flow.LastQuestionAsked = ConversationFlow.Question.None;
+                        
                         profile = new UserProfile();
                         break;
                     }
@@ -204,5 +226,8 @@ public class FightBot : ActivityHandler
 
             return false;
         }
+    
+        
+
     }
 }
