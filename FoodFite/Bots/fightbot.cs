@@ -75,14 +75,23 @@ public class FightBot : ActivityHandler
                         profile.addFood((Food)ItemFactory.JelloFactory());
                         _cafeteria.addUser(profile.Name, turnContext.Activity.GetConversationReference());
                         await turnContext.SendActivityAsync($"Hi {profile.Name}.", null, null, cancellationToken);
-                        string foodFighters = "\n";
+
+                        var buttons = new List<CardAction>();
                         foreach(string username in _cafeteria._users) {
                             if(username != profile.Name) {
-                                foodFighters += $"{username} \n";
+                                var action = new CardAction(ActionTypes.ImBack, username, value: username);
+                                buttons.Add(action);
                             }
                         }
-                        await turnContext.SendActivityAsync($"Whom do you wish to fight? {foodFighters}", null, null, cancellationToken);
-                        await turnContext.SendActivityAsync("Whom do you wish to challenge to a fight?", null, null, cancellationToken);
+
+                        var userCards = new HeroCard
+                        {
+                            Title = "Whom do you wish to fight?",
+                            Buttons = buttons
+                        };
+
+                        var fightresponse = MessageFactory.Attachment(userCards.ToAttachment());
+                        await turnContext.SendActivityAsync(fightresponse, cancellationToken);
                         flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                         break;
                     }
@@ -95,6 +104,7 @@ public class FightBot : ActivityHandler
                     if (ValidateName(input, out var opponent, out message))
                     {
                         profile.Opponent = opponent;
+                        //we need to find a way to not attach the opponent to the profile, prevents multiple fights at once.
                         await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
                         await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
                         
@@ -126,6 +136,7 @@ public class FightBot : ActivityHandler
                     if (ValidateName(input, out var weapon, out message))
                     {
                         profile.Weapon = weapon;
+                        //we need to find a way to not attach the weapon to the profile, prevents multiple fights at once.
                         await turnContext.SendActivityAsync($"You choose to attack {profile.Opponent}.");
                         await turnContext.SendActivityAsync($"Using the {profile.Weapon}.");
                         await turnContext.SendActivityAsync($"Type anything to run the bot again.");
