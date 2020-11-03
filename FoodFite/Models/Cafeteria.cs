@@ -17,7 +17,6 @@ namespace FoodFite.Models
             _users.Add(name);
             _conversation.Add(name, conversation);
         }
-        public static List<string> Users { get; set;}
         public string Name { get; set; }
         public int MaxNumberOfThrowsInAFite { get; set; }
         public decimal AmountOfDailyLunchMoney { get; set; }
