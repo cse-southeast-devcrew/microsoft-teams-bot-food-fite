@@ -1,16 +1,13 @@
 namespace FoodFite.Models
 {
     using System;
-    public class Protection
+    public class Protection : Item
     {
-        public Protection(string name, int health, int minProc, int variance){
-            this.Name = name;
+        public Protection(string name, int health, int minProc, int variance): base(name, false) {
             this.Health = health;
             this.MinProtection = minProc;
             this.Variance = variance;
         }
-
-        public string Name {get;set;}
         public double Health {get;set;}
         public int MinProtection {get; set;}
         public int Variance {get; set;}
