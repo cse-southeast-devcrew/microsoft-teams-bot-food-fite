@@ -9,10 +9,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
+using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Recognizers.Text;
 using Microsoft.Recognizers.Text.DateTime;
 using Microsoft.Recognizers.Text.Number;
 using FoodFite.Models;
+using FoodFite.Factories;
 
 namespace FoodFite.Bots
 {
@@ -23,20 +25,24 @@ public class FightBot : ActivityHandler
     {
         private readonly BotState _userState;
         private readonly BotState _conversationState;
+        private readonly IStatePropertyAccessor<UserProfile> _userProfileAccessor;
+        private readonly Cafeteria _cafeteria;
 
-        private readonly Cafeteria _cafeState;
+        private readonly IBotFrameworkHttpAdapter _adapter;
         
-        public FightBot(ConversationState conversationState, UserState userState, Cafeteria cafeState)
+        public FightBot(ConversationState conversationState, UserState userState, Cafeteria cafeteria, IBotFrameworkHttpAdapter adapter)
         {
             _conversationState = conversationState;
             _userState = userState;
-            _cafeState = cafeState;
+            _cafeteria = cafeteria;
+            _adapter = adapter;
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
            
             var conversationStateAccessors = _conversationState.CreateProperty<ConversationFlow>(nameof(ConversationFlow));
+            //turnContext.Activity.GetConversationReference
             var flow = await conversationStateAccessors.GetAsync(turnContext, () => new ConversationFlow(), cancellationToken);
 
             var userStateAccessors = _userState.CreateProperty<UserProfile>(nameof(UserProfile));
@@ -64,8 +70,18 @@ public class FightBot : ActivityHandler
                     if (ValidateName(input, out var name, out message))
                     {
                         profile.Name = name;
+                        profile.FoodInventory.Add((Food)ItemFactory.BananaFactory());
+                        profile.FoodInventory.Add((Food)ItemFactory.GrapeFactory());
+                        profile.FoodInventory.Add((Food)ItemFactory.JelloFactory());
+                        _cafeteria.addUser(profile.Name, turnContext.Activity.GetConversationReference());
                         await turnContext.SendActivityAsync($"Hi {profile.Name}.", null, null, cancellationToken);
-                        await turnContext.SendActivityAsync(_cafeState.Users.Count.ToString(), null, null, cancellationToken);
+                        string test = "\n";
+                        foreach(string username in _cafeteria._users) {
+                            if(username != profile.Name) {
+                                test += $"{username} \n";
+                            }
+                        }
+                        await turnContext.SendActivityAsync($"Whom do you wish to fight? {test}", null, null, cancellationToken);
                         await turnContext.SendActivityAsync("Whom do you wish to challenge to a fight?", null, null, cancellationToken);
                         flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                         break;
@@ -82,17 +98,21 @@ public class FightBot : ActivityHandler
                         await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
                         //await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
                         
+                        var buttons = new List<CardAction>();
+                        foreach( Food item in profile.FoodInventory) {
+                            var action = new CardAction(ActionTypes.ImBack, item.Name, value: item.Name);
+                            buttons.Add(action);
+                        }
+
                         var weaponcard = new HeroCard
                         {
                             Title = "Choose your weapon",
+                            Buttons = buttons
                             //Text = @"Let's get started. What is your name?",
                             //Images = new List<CardImage>() { new CardImage("https://aka.ms/bf-welcome-card-image") },
-                            Buttons = new List<CardAction>()
-                            {
-                                new CardAction(ActionTypes.ImBack, "Banna", value: "Banna"),
-                                new CardAction(ActionTypes.ImBack, "Jello", value: "Jello"),
-                                new CardAction(ActionTypes.ImBack, "Pizza", value: "Pizza"),
-                            }
+
+                            // need to grab foods from userprofiles food list and display here
+
                         };
 
                         var weaponresponse = MessageFactory.Attachment(weaponcard.ToAttachment());
@@ -114,6 +134,10 @@ public class FightBot : ActivityHandler
                         await turnContext.SendActivityAsync($"You choose to attack {profile.Opponent}.");
                         await turnContext.SendActivityAsync($"Using the {profile.Weapon}.");
                         await turnContext.SendActivityAsync($"Type anything to run the bot again.");
+
+                        await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer , default(CancellationToken));
+
+
                         flow.LastQuestionAsked = ConversationFlow.Question.None;
                         
                         profile = new UserProfile();
@@ -125,6 +149,10 @@ public class FightBot : ActivityHandler
                         break;
                     }
             }
+        }
+
+        private  async Task notifyPlayer(ITurnContext context, CancellationToken token) {
+            await context.SendActivityAsync("you were attacked");
         }
 
         private static bool ValidateName(string input, out string name, out string message)
