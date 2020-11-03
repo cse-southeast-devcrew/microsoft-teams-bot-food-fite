@@ -46,7 +46,7 @@ namespace FoodFite.Bots
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
-                    var reply = MessageFactory.Text($"Wellcome to the Food Fite Bot {member.Id}. Type anything to get started.");
+                    var reply = MessageFactory.Text($"Welcome to the Food Fite Bot {member.Id}. Type anything to get started.");
                     await turnContext.SendActivityAsync(reply, cancellationToken);
                 }
             }
