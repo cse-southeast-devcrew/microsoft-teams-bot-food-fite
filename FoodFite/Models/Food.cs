@@ -1,17 +1,14 @@
 namespace FoodFite.Models
 {
     using System;
-    public class Food
+    public class Food : Item
     {
-        public Food(string name, double damage, int minAcc, int variance, int ammo){
-            this.Name = name;
+        public Food(string name, double damage, int minAcc, int variance, int ammo) : base(name, true){
             this.Damage = damage;
             this.MinAccuracy = minAcc;
             this.Variance = variance;
             this.Ammo = ammo;
         }
-
-        public string Name {get; set;}
         public double Damage {get; set;}
         public int MinAccuracy {get; set;}
         public int Variance{get;set;}
