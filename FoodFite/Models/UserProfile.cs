@@ -13,7 +13,7 @@ namespace FoodFite.Models
     public class UserProfile
     {
         public string Name { get; set; }
-        public UserProfile Opponent { get; set; }
+        public string Opponent { get; set; }
         public Food Weapon { get; set; }
         public List<Item> Inventory { get; set;}
         public double Health { get; set;}
@@ -45,7 +45,7 @@ namespace FoodFite.Models
             }
         }
 
-        public double ThrowFood(Food food, UserProfile target){
+        public double ThrowFood(Food food){
             double damage = food.Attack(0);
 
             if(!food.hasAmmo()){
@@ -54,7 +54,7 @@ namespace FoodFite.Models
                 FoodMap.Remove(food.Name);
             }
             
-            return target.GetHit(damage);
+            return damage;
         }
 
         public double GetHit(double damage){

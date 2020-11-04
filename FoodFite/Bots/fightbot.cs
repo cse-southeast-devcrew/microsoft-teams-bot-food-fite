@@ -18,10 +18,10 @@ using FoodFite.Factories;
 
 namespace FoodFite.Bots
 {
-// This IBot implementation can run any type of Dialog. The use of type parameterization is to allows multiple different bots
+    // This IBot implementation can run any type of Dialog. The use of type parameterization is to allows multiple different bots
     // to be run at different endpoints within the same project. This can be achieved by defining distinct Controller types
     // each with dependency on distinct IBot types, this way ASP Dependency Injection can glue everything together without ambiguity.
-public class FightBot : ActivityHandler 
+    public class FightBot : ActivityHandler
     {
         private readonly BotState _userState;
         private readonly BotState _conversationState;
@@ -30,14 +30,14 @@ public class FightBot : ActivityHandler
 
         private readonly IBotFrameworkHttpAdapter _adapter;
 
-                // Messages sent to the user.
+        // Messages sent to the user.
         private const string WelcomeMessage = "Hack project to build a " +
                                               "multiplayer game inspired " +
                                               "by the Food Fight game from " +
                                               "the days of old";
 
-     
-        
+
+
         public FightBot(ConversationState conversationState, UserState userState, Cafeteria cafeteria, IBotFrameworkHttpAdapter adapter)
         {
             _conversationState = conversationState;
@@ -53,14 +53,14 @@ public class FightBot : ActivityHandler
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
                     var welcomeCard = new HeroCard
-                        {
-                            Text = WelcomeMessage,
-                            Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/food-fight-blog.jpg") },
-                            Buttons = new List<CardAction>()
+                    {
+                        Text = WelcomeMessage,
+                        Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/food-fight-blog.jpg") },
+                        Buttons = new List<CardAction>()
                             {
                                 new CardAction(ActionTypes.ImBack, "Fight!",  value: "Fight!"),
                             }
-                        };
+                    };
 
                     var welcomeResponse = MessageFactory.Attachment(welcomeCard.ToAttachment());
                     await turnContext.SendActivityAsync(welcomeResponse, cancellationToken);
@@ -70,7 +70,7 @@ public class FightBot : ActivityHandler
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-           
+
             var conversationStateAccessors = _conversationState.CreateProperty<ConversationFlow>(nameof(ConversationFlow));
             //turnContext.Activity.GetConversationReference
             var flow = await conversationStateAccessors.GetAsync(turnContext, () => new ConversationFlow(), cancellationToken);
@@ -94,36 +94,23 @@ public class FightBot : ActivityHandler
             {
                 case ConversationFlow.Question.None:
                     await turnContext.SendActivityAsync("Let's get started. What is your name?", null, null, cancellationToken);
-                    flow.LastQuestionAsked = ConversationFlow.Question.Name;
+                    flow.LastQuestionAsked = ConversationFlow.Question.Action;
                     break;
-                case ConversationFlow.Question.Name:
+
+                case ConversationFlow.Question.Action:
                     if (ValidateName(input, out var name, out message))
                     {
                         profile.Name = name;
                         profile.addFood((Food)ItemFactory.RandomFoodFactory());
                         profile.addFood((Food)ItemFactory.RandomFoodFactory());
                         profile.addFood((Food)ItemFactory.RandomFoodFactory());
-                        profile.ChangeClothes((Protection)ItemFactory.WhiteTeeShirtFactory());
-                        _cafeteria.addUser(profile.Name, turnContext.Activity.GetConversationReference());
+                        profile.ChangeClothes((Protection)ItemFactory.RandomDefenseGearFactory());
+                        profile.Health = 100;
+                        _cafeteria.addUser(profile, turnContext.Activity.GetConversationReference());
                         await turnContext.SendActivityAsync($"Hi {profile.Name}. You are currently armed with a {profile.Clothes.Name}", null, null, cancellationToken);
 
-                        var buttons = new List<CardAction>();
-                        foreach(UserProfile username in _cafeteria._users) {
-                            if(username.Name != profile.Name) {
-                                var action = new CardAction(ActionTypes.ImBack, username.Name, value: username.Name);
-                                buttons.Add(action);
-                            }
-                        }
-
-                        var userCards = new HeroCard
-                        {
-                            Title = "Whom do you wish to fight?",
-                            Buttons = buttons
-                        };
-
-                        var fightresponse = MessageFactory.Attachment(userCards.ToAttachment());
-                        await turnContext.SendActivityAsync(fightresponse, cancellationToken);
-                        flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
+                        await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
+                        flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
                         break;
                     }
                     else
@@ -131,29 +118,59 @@ public class FightBot : ActivityHandler
                         await turnContext.SendActivityAsync(message ?? "I'm sorry, I didn't understand that.", null, null, cancellationToken);
                         break;
                     }
+
+                case ConversationFlow.Question.Back:
+                    await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
+                    flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
+                    break;
+
+                case ConversationFlow.Question.ActionRouting:
+                    if (ValidateName(input, out var action, out message))
+                    {
+                        if (_cafeteria._users.ContainsKey(profile.Name))
+                        {
+                            switch (action.ToLower())
+                            {
+                                case "throw food":
+                                    await turnContext.SendActivityAsync(SelectTargetQuestion(profile), cancellationToken);
+                                    flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
+                                    break;
+                                case "check status":
+                                    StateStatus(turnContext, profile, cancellationToken);
+
+                                    await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
+                                    flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
+                                    break;
+                                default:
+                                    await turnContext.SendActivityAsync(message ?? "I'm sorry, I didn't understand that.", null, null, cancellationToken);
+                                    await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
+                                    flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            await turnContext.SendActivityAsync(message ?? "You're in detention, no actions permitted.");
+                            await turnContext.SendActivityAsync(ListRemainingPlayers(), cancellationToken);
+                            flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        await turnContext.SendActivityAsync(message ?? "I'm sorry, I didn't understand that.", null, null, cancellationToken);
+                        break;
+                    }
+
                 case ConversationFlow.Question.Opponent:
                     if (ValidateName(input, out var opponent, out message))
                     {
-                        profile.Opponent = _cafeteria.GetUser(opponent);
+                        profile.Opponent = _cafeteria.GetUser(opponent).Name;
                         //we need to find a way to not attach the opponent to the profile, prevents multiple fights at once.
-                        await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent.Name}.", null, null, cancellationToken);
+                        await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
                         await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
-                        
-                        var buttons = new List<CardAction>();
-                        foreach( Food item in profile.ListFood()) {
-                            var action = new CardAction(ActionTypes.ImBack, $"{item.Name}: {item.Ammo} left", value: item.Name);
-                            buttons.Add(action);
-                        }
+                        await turnContext.SendActivityAsync(SelectWeaponQuestion(profile), cancellationToken);
 
-                        var weaponcard = new HeroCard
-                        {
-                            Title = "Choose your weapon",
-                            Buttons = buttons
-                        };
-
-                        var weaponresponse = MessageFactory.Attachment(weaponcard.ToAttachment());
-                        await turnContext.SendActivityAsync(weaponresponse, cancellationToken);
-                        
                         flow.LastQuestionAsked = ConversationFlow.Question.Weapon;
                         break;
                     }
@@ -167,37 +184,25 @@ public class FightBot : ActivityHandler
                     if (ValidateName(input, out var weapon, out message))
                     {
                         profile.Weapon = profile.FoodMap[weapon];
-                        int damage = (int)(profile.ThrowFood(profile.FoodMap[weapon], profile.Opponent));
+                        int damage = (int)(profile.ThrowFood(profile.FoodMap[weapon]));
                         //we need to find a way to not attach the weapon to the profile, prevents multiple fights at once.
-                        await turnContext.SendActivityAsync($"You threw a {profile.Weapon.Name} at {profile.Opponent.Name} and dealt {damage} damage!");
-                        
-                        var buttons = new List<CardAction>();
-                        foreach(UserProfile username in _cafeteria._users) {
-                            if(username.Name != profile.Name) {
-                                var action = new CardAction(ActionTypes.ImBack, username.Name, value: username.Name);
-                                buttons.Add(action);
-                            }
-                        }
-
-                        var userCards = new HeroCard
-                        {
-                            Title = "Whom do you wish to fight?",
-                            Buttons = buttons
-                        };
-                        var fightresponse = MessageFactory.Attachment(userCards.ToAttachment());
-                        await turnContext.SendActivityAsync(fightresponse, cancellationToken);
+                        await turnContext.SendActivityAsync($"You threw a {profile.Weapon.Name} at {profile.Opponent} and dealt {damage} damage!");
 
                         Queue<string> actionQueue;
-                        if(!_cafeteria._actions.ContainsKey(profile.Opponent.Name)) {
+                        if (!_cafeteria._actions.ContainsKey(profile.Opponent))
+                        {
                             actionQueue = new Queue<string>();
-                            _cafeteria._actions.Add(profile.Opponent.Name, actionQueue);
-                        } else {
-                            actionQueue = _cafeteria._actions[profile.Opponent.Name];
+                            _cafeteria._actions.Add(profile.Opponent, actionQueue);
                         }
-                        actionQueue.Enqueue($"{profile.Name} hit you with {profile.Weapon.Name} for {damage} damage!");
-                        await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent.Name], notifyPlayer , default(CancellationToken));
-                        
-                        flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
+                        else
+                        {
+                            actionQueue = _cafeteria._actions[profile.Opponent];
+                        }
+                        actionQueue.Enqueue($"{profile.Name},{profile.Weapon.Name},{damage}");
+                        await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer, default(CancellationToken));
+
+                        await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
+                        flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
                         break;
                     }
                     else
@@ -208,9 +213,104 @@ public class FightBot : ActivityHandler
             }
         }
 
-        private async Task notifyPlayer(ITurnContext context, CancellationToken token) {
+        private async Task notifyPlayer(ITurnContext context, CancellationToken token)
+        {
             var profile = await _userProfileAccessor.GetAsync(context, () => new UserProfile(), token);
-            await context.SendActivityAsync(_cafeteria._actions[profile.Name].Dequeue());
+
+            var message = _cafeteria._actions[profile.Name].Dequeue().Split(",");
+            var player = message[0];
+            var food = message[1];
+            var damage = double.Parse(message[2]);
+            var taken = (int)(_cafeteria.GetUser(profile.Name).GetHit(damage));
+
+            await context.SendActivityAsync($"{player} threw {food} at you for {damage} damage. You take {taken} damage.");
+
+            if (_cafeteria.GetUser(profile.Name).Health <= 0)
+            {
+                _cafeteria._users.Remove(profile.Name);
+                await context.SendActivityAsync($"Defeat: You've been hit by too much food and now have detention");
+            }
+        }
+
+        private IMessageActivity ListRemainingPlayers()
+        {
+            var buttons = new List<CardAction>();
+            foreach (string username in _cafeteria._users.Keys)
+            {
+                var actioncard = new CardAction(ActionTypes.ImBack, "username", value: "");
+                buttons.Add(actioncard);
+            }
+
+            var userCard = new HeroCard
+            {
+                Title = "Remaining Players",
+                Buttons = buttons
+            };
+            return MessageFactory.Attachment(userCard.ToAttachment());
+        }
+
+        private IMessageActivity ActionQuestion()
+        {
+            var actionButtons = new List<CardAction>();
+            actionButtons.Add(new CardAction(ActionTypes.ImBack, "Throw Food", value: "Throw Food"));
+            actionButtons.Add(new CardAction(ActionTypes.ImBack, "Check Status", value: "Check Status"));
+
+            var userCards = new HeroCard
+            {
+                Title = "What action would you like to do?",
+                Buttons = actionButtons
+            };
+
+            return MessageFactory.Attachment(userCards.ToAttachment());
+        }
+
+        private IMessageActivity SelectTargetQuestion(UserProfile profile)
+        {
+            var buttons = new List<CardAction>();
+            foreach (string username in _cafeteria._users.Keys)
+            {
+                if (username != profile.Name)
+                {
+                    var actioncard = new CardAction(ActionTypes.ImBack, username, value: username);
+                    buttons.Add(actioncard);
+                }
+            }
+
+            var userCard = new HeroCard
+            {
+                Title = "Who is your target?",
+                Buttons = buttons
+            };
+
+            return MessageFactory.Attachment(userCard.ToAttachment());
+        }
+
+        private IMessageActivity SelectWeaponQuestion(UserProfile profile)
+        {
+            var buttons = new List<CardAction>();
+            foreach (var item in profile.FoodMap)
+            {
+                var action = new CardAction(ActionTypes.ImBack, $"{item.Key}: {item.Value.Ammo} left", value: item.Key);
+                buttons.Add(action);
+            }
+
+            var weaponcard = new HeroCard
+            {
+                Title = "Choose your weapon",
+                Buttons = buttons
+            };
+
+            return MessageFactory.Attachment(weaponcard.ToAttachment());
+        }
+
+        private async void StateStatus(ITurnContext turnContext, UserProfile user, CancellationToken cancellationToken)
+        {
+            var profile = _cafeteria._users[user.Name];
+            await turnContext.SendActivityAsync($"You have {(int)(profile.Health)} health remaining.", null, null, cancellationToken);
+            if (profile.Clothes != null)
+            {
+                await turnContext.SendActivityAsync($"Your {profile.Clothes.Name} has {(int)(profile.Clothes.Health)} health remaining.", null, null, cancellationToken);
+            }
         }
 
         private static bool ValidateName(string input, out string name, out string message)
@@ -229,91 +329,5 @@ public class FightBot : ActivityHandler
 
             return message is null;
         }
-
-        private static bool ValidateAge(string input, out int age, out string message)
-        {
-            age = 0;
-            message = null;
-
-            // Try to recognize the input as a number. This works for responses such as "twelve" as well as "12".
-            try
-            {
-                // Attempt to convert the Recognizer result to an integer. This works for "a dozen", "twelve", "12", and so on.
-                // The recognizer returns a list of potential recognition results, if any.
-
-                var results = NumberRecognizer.RecognizeNumber(input, Culture.English);
-
-                foreach (var result in results)
-                {
-                    // The result resolution is a dictionary, where the "value" entry contains the processed string.
-                    if (result.Resolution.TryGetValue("value", out var value))
-                    {
-                        age = Convert.ToInt32(value);
-                        if (age >= 18 && age <= 120)
-                        {
-                            return true;
-                        }
-                    }
-                }
-
-                message = "Please enter an age between 18 and 120.";
-            }
-            catch
-            {
-                message = "I'm sorry, I could not interpret that as an age. Please enter an age between 18 and 120.";
-            }
-
-            return message is null;
-        }
-
-        private static bool ValidateDate(string input, out string date, out string message)
-        {
-            date = null;
-            message = null;
-
-            // Try to recognize the input as a date-time. This works for responses such as "11/14/2018", "9pm", "tomorrow", "Sunday at 5pm", and so on.
-            // The recognizer returns a list of potential recognition results, if any.
-            try
-            {
-                var results = DateTimeRecognizer.RecognizeDateTime(input, Culture.English);
-
-                // Check whether any of the recognized date-times are appropriate,
-                // and if so, return the first appropriate date-time. We're checking for a value at least an hour in the future.
-                var earliest = DateTime.Now.AddHours(1.0);
-
-                foreach (var result in results)
-                {
-                    // The result resolution is a dictionary, where the "values" entry contains the processed input.
-                    var resolutions = result.Resolution["values"] as List<Dictionary<string, string>>;
-
-                    foreach (var resolution in resolutions)
-                    {
-                        // The processed input contains a "value" entry if it is a date-time value, or "start" and
-                        // "end" entries if it is a date-time range.
-                        if (resolution.TryGetValue("value", out var dateString)
-                            || resolution.TryGetValue("start", out dateString))
-                        {
-                            if (DateTime.TryParse(dateString, out var candidate)
-                                && earliest < candidate)
-                            {
-                                date = candidate.ToShortDateString();
-                                return true;
-                            }
-                        }
-                    }
-                }
-
-                message = "I'm sorry, please enter a date at least an hour out.";
-            }
-            catch
-            {
-                message = "I'm sorry, I could not interpret that as an appropriate date. Please enter a date at least an hour out.";
-            }
-
-            return false;
-        }
-    
-        
-
     }
 }

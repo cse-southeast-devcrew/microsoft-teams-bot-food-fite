@@ -5,9 +5,11 @@ namespace FoodFite.Models
         // Identifies the last question asked.
         public enum Question
         {
-            Name,
             Opponent,
             Weapon,
+            Action,
+            ActionRouting,
+            Back,
             None, // Our last action did not involve a question.
         }
 
