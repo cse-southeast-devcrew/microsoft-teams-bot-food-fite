@@ -6,6 +6,7 @@ namespace FoodFite.Models
         public enum Question
         {
             Opponent,
+            Gear,
             Weapon,
             Action,
             ActionRouting,
