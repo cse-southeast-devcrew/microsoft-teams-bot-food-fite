@@ -14,15 +14,15 @@ namespace FoodFite.Factories
             new List<Item>{TrashCanLidFactory(), WhiteTeeShirtFactory(), TrayFactory(), RaincoatFactory()};
 
         public static Item JelloFactory() {
-            return new Food("Jello",10,10,10,10);
+            return new Food("Jello",70,0,100,10);
         }
 
         public static Item BananaFactory() {
-            return new Food("Banana",10,10,10,10);
+            return new Food("Banana",40,30,70,10);
         }
 
         public static Item GrapeFactory() {
-            return new Food("Grape",10,10,10,10);
+            return new Food("Grape",20,60,40,10);
         }
 
         public static Item PizzaFactory() {
