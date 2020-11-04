@@ -18,7 +18,7 @@ namespace FoodFite.Models
             int accuracy = MinProtection + protectionMod;
             double damageAbsorbed = ((double)(r.Next(accuracy, accuracy+Variance))/100.0) * damage;
             Health = Health - (damage - damageAbsorbed);
-            return damageAbsorbed;    
+            return damage - damageAbsorbed;
         }
 
         public bool isBroken(){

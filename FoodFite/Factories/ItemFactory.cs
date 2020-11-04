@@ -8,11 +8,11 @@ namespace FoodFite.Factories
     {
 
         public static Item JelloFactory() {
-            return new Food("Jello",70,0,100,10);
+            return new Food("Jello",60,0,100,2);
         }
 
         public static Item BananaFactory() {
-            return new Food("Banana",40,30,70,10);
+            return new Food("Banana",40,30,70,5);
         }
 
         public static Item GrapeFactory() {
