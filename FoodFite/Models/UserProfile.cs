@@ -51,6 +51,7 @@ namespace FoodFite.Models
             if(!food.hasAmmo()){
                 int index = Inventory.FindIndex(item => item.Name == food.Name);
                 Inventory.RemoveAt(index);
+                FoodMap.Remove(food.Name);
             }
             
             return target.GetHit(damage);
