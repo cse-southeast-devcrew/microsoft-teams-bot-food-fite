@@ -66,16 +66,16 @@ namespace FoodFite.Bots
             var flow = await conversationStateAccessors.GetAsync(turnContext, () => new ConversationFlow(), cancellationToken);
 
             _userProfileAccessor = _userState.CreateProperty<UserProfile>(nameof(UserProfile));
-            var profile = await _userProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
+            var profileCache = await _userProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
 
-            await FillOutUserProfileAsync(flow, profile, turnContext, cancellationToken);
+            await FillOutUserProfileAsync(flow, profileCache, turnContext, cancellationToken);
 
             // Save changes.
             await _conversationState.SaveChangesAsync(turnContext, false, cancellationToken);
             await _userState.SaveChangesAsync(turnContext, false, cancellationToken);
         }
 
-        private async Task FillOutUserProfileAsync(ConversationFlow flow, UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
+        private async Task FillOutUserProfileAsync(ConversationFlow flow, UserProfile profileCache, ITurnContext turnContext, CancellationToken cancellationToken)
         {
             var input = turnContext.Activity.Text?.Trim();
             string message;
@@ -90,6 +90,8 @@ namespace FoodFite.Bots
                 case ConversationFlow.Question.Action:
                     if (ValidateName(input, out var name, out message))
                     {
+                        profileCache.Name = name;
+                        UserProfile profile = new UserProfile();
                         profile.Name = name;
                         profile.addFood((Food)ItemFactory.RandomFoodFactory());
                         profile.addFood((Food)ItemFactory.RandomFoodFactory());
@@ -118,8 +120,9 @@ namespace FoodFite.Bots
                 case ConversationFlow.Question.ActionRouting:
                     if (ValidateName(input, out var action, out message))
                     {
-                        if (_cafeteria._users.ContainsKey(profile.Name))
+                        if (_cafeteria._users.ContainsKey(profileCache.Name))
                         {
+                            UserProfile profile = _cafeteria._users[profileCache.Name];
                             switch (action.ToLower())
                             {
                                 case "throw food":
@@ -175,6 +178,7 @@ namespace FoodFite.Bots
                 case ConversationFlow.Question.ChangeClothes:
                     if (ValidateName(input, out var answer, out message))
                     {
+                        UserProfile profile = _cafeteria._users[profileCache.Name];
                         var user = _cafeteria._users[profile.Name];
                         var item = user.FoundItem;
                         user.FoundItem = null;
@@ -206,6 +210,7 @@ namespace FoodFite.Bots
                 case ConversationFlow.Question.Opponent:
                     if (ValidateName(input, out var opponent, out message))
                     {
+                        UserProfile profile = _cafeteria._users[profileCache.Name];
                         profile.Opponent = _cafeteria.GetUser(opponent).Name;
                         //we need to find a way to not attach the opponent to the profile, prevents multiple fights at once.
                         await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
@@ -224,6 +229,7 @@ namespace FoodFite.Bots
                 case ConversationFlow.Question.Weapon:
                     if (ValidateName(input, out var weapon, out message))
                     {
+                        UserProfile profile = _cafeteria._users[profileCache.Name];
                         var user = _cafeteria._users[profile.Name];
                         user.Weapon = user.FoodMap[weapon];
                         int damage = (int)(user.ThrowFood(user.FoodMap[weapon]));
