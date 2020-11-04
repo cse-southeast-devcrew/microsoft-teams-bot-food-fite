@@ -23,7 +23,7 @@ You'll basically want to add your private key to the SSH agent with `ssh-add /pa
 ### VS Code
 
 1. Click "Run" from the top menu then "Run without Debugging". This will prompt you to create a `launch.json`.
-2. Click "View" from the top menu then "Run". This should open the debug pane. 
+2. Click "View" from the top menu then "Run". This should open the debug pane.
 3. Select from the drop down the configuration created in step 1, probably ".NET Core Launch (web)".
 
 *Note: This will fail until environment variables are set up in the following step.
