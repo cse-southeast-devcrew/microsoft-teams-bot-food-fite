@@ -53,18 +53,7 @@ namespace FoodFite.Bots
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
-                    var welcomeCard = new HeroCard
-                    {
-                        Text = WelcomeMessage,
-                        Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/food-fight-blog.jpg") },
-                        Buttons = new List<CardAction>()
-                            {
-                                new CardAction(ActionTypes.ImBack, "Fight!",  value: "Fight!"),
-                            }
-                    };
-
-                    var welcomeResponse = MessageFactory.Attachment(welcomeCard.ToAttachment());
-                    await turnContext.SendActivityAsync(welcomeResponse, cancellationToken);
+                    await turnContext.SendActivityAsync(CreateWelcomeCard(), cancellationToken);
                 }
             }
         }
@@ -108,7 +97,8 @@ namespace FoodFite.Bots
                         profile.ChangeClothes((Protection)ItemFactory.RandomDefenseGearFactory());
                         profile.Health = 100;
                         _cafeteria.addUser(profile, turnContext.Activity.GetConversationReference());
-                        await turnContext.SendActivityAsync($"Hi {profile.Name}. You are currently armed with a {profile.Clothes.Name}", null, null, cancellationToken);
+
+                        await turnContext.SendActivityAsync(CreateUserStatusCard(profile), cancellationToken);
 
                         await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
                         flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
@@ -280,6 +270,7 @@ namespace FoodFite.Bots
             var userCard = new HeroCard
             {
                 Title = "Who is your target?",
+                Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/DglSZFvVQAAGNYU.jpg") },
                 Buttons = buttons
             };
 
@@ -298,6 +289,7 @@ namespace FoodFite.Bots
             var weaponcard = new HeroCard
             {
                 Title = "Choose your weapon",
+                Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/fortnite-back-bling-deep-fried.jpg") },
                 Buttons = buttons
             };
 
@@ -339,13 +331,19 @@ namespace FoodFite.Bots
 
             var inv = user.Inventory;
 
-            foodsb.AppendLine(string.Format("Name: {0} ",user.Name));
+            foodsb.AppendLine(string.Format("Hi {0}",user.Name));
             foodsb.Append(Environment.NewLine);
 
+            foodsb.AppendLine(string.Format("You are wearing {0} with a current health of {1}", user.Clothes.Name,user.Clothes.Health));
+            foodsb.Append(Environment.NewLine);
+
+            foodsb.AppendLine("You have the following food items:");
+            foodsb.Append(Environment.NewLine);
+            
             foreach (var item in inv)
             {
                 var x = user.FoodMap[item.Name];
-                foodsb.AppendLine(string.Format("Food:{0} - Ammo{1}",x.Name,x.Ammo));
+                foodsb.AppendLine(string.Format("Food:{0} - Ammo:{1}",x.Name,x.Ammo));
                 foodsb.Append(Environment.NewLine);
             }
 
@@ -362,6 +360,22 @@ namespace FoodFite.Bots
                 };
 
             return MessageFactory.Attachment(card.ToAttachment());
+        }
+
+        private IMessageActivity CreateWelcomeCard(){
+            
+            var welcomeCard = new HeroCard
+                    {
+                        Text = WelcomeMessage,
+                        Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/food-fight-blog.jpg") },
+                        Buttons = new List<CardAction>()
+                            {
+                                new CardAction(ActionTypes.ImBack, "Fight!",  value: "Fight!"),
+                            }
+                    };
+
+            return MessageFactory.Attachment(welcomeCard.ToAttachment());
+        
         }
 
     }
