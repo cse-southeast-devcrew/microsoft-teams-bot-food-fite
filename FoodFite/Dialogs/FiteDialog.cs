@@ -27,6 +27,7 @@ namespace FoodFite.Dialogs
 
         private async Task<DialogTurnResult> GetStatsAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            // TODO: Add rules engine to calculate and control game play.
             UserProfile userProfile = await _stateProvider.ReadByIdAsync(stepContext.Context.Activity.From.Id);
             await stepContext.Context.SendActivityAsync(
                 MessageFactory.Text($"Your stats are: {userProfile.Stains}"),

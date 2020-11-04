@@ -35,6 +35,7 @@ namespace FoodFite.Dialogs
         {
             var result = stepContext.Context.Activity.Text.ToLower();
 
+            // TODO: Move this over to command pattern
             switch (result)
             {
                 case "help":
