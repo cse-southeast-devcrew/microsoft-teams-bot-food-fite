@@ -17,6 +17,7 @@ using FoodFite.Models;
 using FoodFite.Factories;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Bot.Connector.Authentication;
 
 namespace FoodFite.Bots
 {
@@ -249,6 +250,9 @@ namespace FoodFite.Bots
                             actionQueue = _cafeteria._actions[profile.Opponent];
                         }
                         actionQueue.Enqueue($"{user.Name},{user.Weapon.Name},{damage}");
+
+                        MicrosoftAppCredentials.TrustServiceUrl(turnContext.Activity.ServiceUrl);
+
                         await ((BotAdapter)_adapter).ContinueConversationAsync(Configuration.GetValue<string>("MicrosoftAppId"), _cafeteria._conversation[profile.Opponent], notifyPlayer, default(CancellationToken));
 
                         await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
