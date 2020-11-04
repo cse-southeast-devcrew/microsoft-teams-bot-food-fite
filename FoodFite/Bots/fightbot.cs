@@ -70,11 +70,12 @@ public class FightBot : ActivityHandler
                     if (ValidateName(input, out var name, out message))
                     {
                         profile.Name = name;
-                        profile.addFood((Food)ItemFactory.BananaFactory());
-                        profile.addFood((Food)ItemFactory.GrapeFactory());
-                        profile.addFood((Food)ItemFactory.JelloFactory());
+                        profile.addFood((Food)ItemFactory.RandomFoodFactory());
+                        profile.addFood((Food)ItemFactory.RandomFoodFactory());
+                        profile.addFood((Food)ItemFactory.RandomFoodFactory());
+                        profile.ChangeClothes((Protection)ItemFactory.WhiteTeeShirtFactory());
                         _cafeteria.addUser(profile.Name, turnContext.Activity.GetConversationReference());
-                        await turnContext.SendActivityAsync($"Hi {profile.Name}.", null, null, cancellationToken);
+                        await turnContext.SendActivityAsync($"Hi {profile.Name}. You are currently armed with a {profile.Clothes.Name}", null, null, cancellationToken);
 
                         var buttons = new List<CardAction>();
                         foreach(string username in _cafeteria._users) {
@@ -109,8 +110,8 @@ public class FightBot : ActivityHandler
                         await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
                         
                         var buttons = new List<CardAction>();
-                        foreach( Food item in profile.Inventory) {
-                            var action = new CardAction(ActionTypes.ImBack, item.Name, value: item.Name);
+                        foreach( Food item in profile.ListFood()) {
+                            var action = new CardAction(ActionTypes.ImBack, $"{item.Name}: {item.Ammo} left", value: item.Name);
                             buttons.Add(action);
                         }
 
