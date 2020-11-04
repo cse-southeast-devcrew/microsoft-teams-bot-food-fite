@@ -19,6 +19,7 @@ namespace FoodFite.Dialogs
             _userState = userState;
 
             AddDialog(new CafeteriaSetupDialog(new StateProvider<Cafeteria>(configuration)));
+            AddDialog(new StatsDialog(new StateProvider<UserProfile>(configuration)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
                 InitialStateSetupAsync,
@@ -38,6 +39,8 @@ namespace FoodFite.Dialogs
                     return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
                 case "create cafeteria":
                     return await stepContext.BeginDialogAsync(nameof(CafeteriaSetupDialog), null, cancellationToken);
+                case "stats":
+                    return await stepContext.BeginDialogAsync(nameof(StatsDialog), null, cancellationToken);
                 default:
                     await stepContext.Context.SendActivityAsync(
                         MessageFactory.Text("Type **help** for a list of commands"),

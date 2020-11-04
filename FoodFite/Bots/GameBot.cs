@@ -64,7 +64,7 @@ namespace FoodFite.Bots
             }
 
             StateProvider<UserProfile> stateProvider = new StateProvider<UserProfile>(_configuration);
-            var existingUserProfile = await stateProvider.ReadByIdAsync(userProfile);
+            var existingUserProfile = await stateProvider.ReadByIdAsync(userProfile.Id);
 
             if (existingUserProfile != null)
             {
@@ -73,6 +73,7 @@ namespace FoodFite.Bots
             }
             else
             {
+                userProfile.Stains = 10; // Need to set this differently
                 await stateProvider.UpsertAsync(userProfile); // TODO: Handle this better
                 var reply = MessageFactory.Text($"Welcome to the Food Fite Bot {userProfile.Name}. Type a command or \"help\" to get started.");
                 await turnContext.SendActivityAsync(reply, cancellationToken);

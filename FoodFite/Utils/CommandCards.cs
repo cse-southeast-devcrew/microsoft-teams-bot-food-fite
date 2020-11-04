@@ -13,7 +13,8 @@ namespace FoodFite.Utils
                 Title = "Available Commands:",
                 Buttons = new List<CardAction>
                 {
-                    new CardAction { Title = "Create Cafeteria", Type = ActionTypes.ImBack, Value = "create cafeteria" }
+                    new CardAction { Title = "Create Cafeteria", Type = ActionTypes.ImBack, Value = "create cafeteria" },
+                    new CardAction { Title = "Show my Stats", Type = ActionTypes.ImBack, Value = "stats" },
                 },
             };
 

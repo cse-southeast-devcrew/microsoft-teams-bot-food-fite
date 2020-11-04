@@ -8,6 +8,7 @@
         public string Id { get; set; }
         public string Name { get; set; }
         public string ChannelId { get; set; }
+        public int Stains { get; set; }
         public BotProfile BotProfile { get; set; }
 
         public override string ToString()

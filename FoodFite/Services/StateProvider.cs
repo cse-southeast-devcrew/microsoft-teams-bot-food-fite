@@ -43,14 +43,14 @@ namespace FoodFite.Services
             return stateItemResponse;
         }
 
-        public async Task<ItemResponse<T>> ReadByIdAsync(T stateItem)
+        public async Task<ItemResponse<T>> ReadByIdAsync(string id)
         {
             ItemResponse<T> stateItemResponse = null;
 
             try
             {
                 Container container = await CosmosHelper.GetContainerAsync(_client, _databaseId, _containerId);
-                stateItemResponse = await container.ReadItemAsync<T>(id: stateItem.Id, partitionKey: new PartitionKey(stateItem.Id));
+                stateItemResponse = await container.ReadItemAsync<T>(id: id, partitionKey: new PartitionKey(id));
             }
             catch
             {
