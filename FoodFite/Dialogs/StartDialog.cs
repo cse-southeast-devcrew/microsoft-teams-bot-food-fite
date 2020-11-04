@@ -8,6 +8,7 @@ namespace FoodFite.Dialogs
     using Microsoft.Bot.Builder.Dialogs;
     using Microsoft.Extensions.Configuration;
     using FoodFite.Models;
+    using Microsoft.Bot.Schema;
 
     class StartDialog : ComponentDialog
     {

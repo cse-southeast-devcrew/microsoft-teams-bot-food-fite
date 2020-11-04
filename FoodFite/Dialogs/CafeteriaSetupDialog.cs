@@ -1,6 +1,5 @@
 namespace FoodFite.Dialogs
 {
-    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Bot.Builder;
@@ -8,7 +7,6 @@ namespace FoodFite.Dialogs
     using FoodFite.Models;
     using System;
     using FoodFite.Services;
-    using Microsoft.Extensions.Configuration;
 
     class CafeteriaSetupDialog : ComponentDialog
     {
@@ -21,11 +19,8 @@ namespace FoodFite.Dialogs
 
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new NumberPrompt<int>(nameof(NumberPrompt<int>)));
-            AddDialog(new NumberPrompt<decimal>(nameof(NumberPrompt<decimal>)));
-            AddDialog(new DateTimePrompt(nameof(DateTimePrompt)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
-                CreateCafeteriaAsync,
                 NameStepAsync,
                 MaxFitesAsync,
                 LunchMoneyPerDayAsync,
@@ -36,32 +31,10 @@ namespace FoodFite.Dialogs
             InitialDialogId = nameof(WaterfallDialog);
         }
 
-        private static async Task<DialogTurnResult> CreateCafeteriaAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var prompt = new PromptOptions { Prompt = MessageFactory.Text("Would you like to create a new Cafeteria?") };
-            return await stepContext.PromptAsync(nameof(TextPrompt), prompt, cancellationToken);
-        }
-
         private static async Task<DialogTurnResult> NameStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var result = (string)stepContext.Result;
-            switch (result.ToLower())
-            {
-                case "no":
-                    await stepContext.Context.SendActivityAsync(
-                        MessageFactory.Text("On to the next thing..."),
-                        cancellationToken);
-                    // return await stepContext.NextAsync(new List<string>(), cancellationToken);
-                    return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
-                case "yes":
-                    var prompt = new PromptOptions { Prompt = MessageFactory.Text("Please enter the cafeteria's name.") };
-                    return await stepContext.PromptAsync(nameof(TextPrompt), prompt, cancellationToken);
-                default:
-                    // TODO: Make this better
-                    await stepContext.Context.SendActivityAsync(MessageFactory.Text("Unknown answer. Expected [yes] or [no]"), cancellationToken);
-                    prompt = new PromptOptions { Prompt = MessageFactory.Text("Would you like to create a new Cafeteria?") };
-                    return await stepContext.PromptAsync(nameof(TextPrompt), prompt, cancellationToken);
-            }
+            var prompt = new PromptOptions { Prompt = MessageFactory.Text("Please enter the cafeteria's name.") };
+            return await stepContext.PromptAsync(nameof(TextPrompt), prompt, cancellationToken);
         }
 
         private static async Task<DialogTurnResult> MaxFitesAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -104,7 +77,7 @@ namespace FoodFite.Dialogs
                 MessageFactory.Text("Thanks for participating!"),
                 cancellationToken);
 
-            var result = await _stateProvider.SaveAsync(cafeteria);
+            var result = await _stateProvider.UpsertAsync(cafeteria);
 
             if (result == null)
                 throw new NullReferenceException("Something happened writing to database"); // TODO: do something different here

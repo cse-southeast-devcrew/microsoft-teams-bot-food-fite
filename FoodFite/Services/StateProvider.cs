@@ -26,7 +26,7 @@ namespace FoodFite.Services
             _containerId = typeof(T).Name;
         }
 
-        public async Task<ItemResponse<T>> SaveAsync(T stateItem)
+        public async Task<ItemResponse<T>> UpsertAsync(T stateItem)
         {
             ItemResponse<T> stateItemResponse = null;
 
@@ -38,6 +38,23 @@ namespace FoodFite.Services
             catch (System.Exception up)
             {
                 throw up;
+            }
+
+            return stateItemResponse;
+        }
+
+        public async Task<ItemResponse<T>> ReadByIdAsync(T stateItem)
+        {
+            ItemResponse<T> stateItemResponse = null;
+
+            try
+            {
+                Container container = await CosmosHelper.GetContainerAsync(_client, _databaseId, _containerId);
+                stateItemResponse = await container.ReadItemAsync<T>(id: stateItem.Id, partitionKey: new PartitionKey(stateItem.Id));
+            }
+            catch (System.Exception up)
+            {
+                // TODO: Log this as exception or user doesn't exist
             }
 
             return stateItemResponse;
