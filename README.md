@@ -1,7 +1,7 @@
 # Food Fite Door Game for Microsoft Teams
 
 ![.NET Core](https://github.com/cse-southeast-devcrew/microsoft-teams-bot-food-fite/workflows/.NET%20Core/badge.svg?branch=main)
-![Continuous Deployment](https://github.com/cse-southeast-devcrew/microsoft-teams-bot-food-fite/workflows/.NET%20Core/badge.svg?branch=main)
+![Continuous Deployment](https://github.com/cse-southeast-devcrew/microsoft-teams-bot-food-fite/workflows/Continuous%20Deployment/badge.svg?branch=main)
 
 ## Description
 
