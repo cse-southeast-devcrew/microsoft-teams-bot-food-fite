@@ -27,6 +27,10 @@ namespace FoodFite.Dialogs
 
         private async Task<DialogTurnResult> EnterCafeteriaAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            // Which caf?
+            // List cafs and current player ammount
+            // Save caf ID to player
+            // Add player ID to caf
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
     }

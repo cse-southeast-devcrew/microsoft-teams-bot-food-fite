@@ -27,6 +27,7 @@ namespace FoodFite.Dialogs
 
         private async Task<DialogTurnResult> GetStatsAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            // You are in Caf or not in a caf
             UserProfile userProfile = await _stateProvider.ReadByIdAsync(stepContext.Context.Activity.From.Id);
             await stepContext.Context.SendActivityAsync(
                 MessageFactory.Text($"Your stats are: {userProfile.Stains}"),
