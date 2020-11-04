@@ -106,6 +106,7 @@ namespace FoodFite.Dialogs
             }
 
             cafeteria.WhenMoneyIsPaid = when;
+            cafeteria.Players = new List<UserProfile>();
 
             await stepContext.Context.SendActivityAsync(
                 MessageFactory.Text("Thanks for participating!"),

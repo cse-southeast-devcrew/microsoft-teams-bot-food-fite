@@ -43,11 +43,14 @@ namespace FoodFite.Bots
         {
             // Run the Dialog with the new message Activity.
             await Dialog.RunAsync(turnContext, ConversationState.CreateProperty<DialogState>(nameof(DialogState)), cancellationToken);
+
+            await ConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
+            await UserState.SaveChangesAsync(turnContext, false, cancellationToken);
         }
 
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
-            UserProfile userProfile = new UserProfile { BotProfile = new BotProfile() };
+            UserProfile userProfile = new UserProfile();
 
             foreach (var member in membersAdded)
             {
@@ -55,11 +58,7 @@ namespace FoodFite.Bots
                 {
                     userProfile.Id = member.Id;
                     userProfile.Name = member.Name;
-                }
-                else
-                {
-                    userProfile.BotProfile.Id = member.Id;
-                    userProfile.BotProfile.Name = member.Name;
+                    userProfile.ConversationReference = turnContext.Activity.GetConversationReference();;
                 }
             }
 

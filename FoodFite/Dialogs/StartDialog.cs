@@ -21,7 +21,7 @@ namespace FoodFite.Dialogs
             AddDialog(new CafeteriaSetupDialog(new StateProvider<Cafeteria>(configuration)));
             AddDialog(new StatsDialog(new StateProvider<UserProfile>(configuration)));
             AddDialog(new FiteDialog(new StateProvider<UserProfile>(configuration)));
-            AddDialog(new EnterCafeteriaDialog(new StateProvider<Cafeteria>(configuration)));
+            AddDialog(new EnterCafeteriaDialog(new StateProvider<Cafeteria>(configuration), new StateProvider<UserProfile>(configuration)));
             AddDialog(new LeaderboardDialog(new StateProvider<UserProfile>(configuration)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {

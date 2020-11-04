@@ -1,6 +1,7 @@
 namespace FoodFite.Models
 {
     using System;
+    using System.Collections.Generic;
     using Newtonsoft.Json;
 
     public class Cafeteria : IStateModel
@@ -15,6 +16,7 @@ namespace FoodFite.Models
         public int MaxNumberOfThrowsInAFite { get; set; }
         public decimal AmountOfDailyLunchMoney { get; set; }
         public DateTime WhenMoneyIsPaid { get; set; }
+        public List<UserProfile> Players { get; set; }
 
         public override string ToString()
         {

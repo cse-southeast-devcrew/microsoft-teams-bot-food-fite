@@ -6,6 +6,10 @@ namespace FoodFite.Services
     using Microsoft.Extensions.Configuration;
     using System.Threading.Tasks;
     using FoodFite.Models;
+    using System.Collections.Generic;
+    using System.IO;
+    using Newtonsoft.Json;
+    using System.Linq;
 
     public class StateProvider<T> where T: IStateModel
     {
@@ -54,10 +58,34 @@ namespace FoodFite.Services
             }
             catch
             {
-                // TODO: Log this as exception or user doesn't exist
+                // TODO: Log this as exception or item doesn't exist
             }
 
             return stateItemResponse;
+        }
+
+        public async Task<List<T>> ReadAllAsync()
+        {
+            List<T> itemList = new List<T>();
+
+            try
+            {
+                Container container = await CosmosHelper.GetContainerAsync(_client, _databaseId, _containerId);
+
+                var query = "SELECT * FROM c";
+                FeedIterator<T> resultSet = container.GetItemQueryIterator<T>(new QueryDefinition(query));
+                while (resultSet.HasMoreResults)
+                {
+                    FeedResponse<T> response = await resultSet.ReadNextAsync();
+                    itemList.AddRange(response);
+                }
+            }
+            catch
+            {
+                // TODO: Log this as exception or user doesn't exist
+            }
+
+            return itemList;
         }
     }
 }
