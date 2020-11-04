@@ -15,6 +15,7 @@ using Microsoft.Recognizers.Text.DateTime;
 using Microsoft.Recognizers.Text.Number;
 using FoodFite.Models;
 using FoodFite.Factories;
+using System.Text;
 
 namespace FoodFite.Bots
 {
@@ -54,6 +55,7 @@ public class FightBot : ActivityHandler
                 {
                     var welcomeCard = new HeroCard
                         {
+                            Title = "Foodfite!",
                             Text = WelcomeMessage,
                             Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/food-fight-blog.jpg") },
                             Buttons = new List<CardAction>()
@@ -312,7 +314,35 @@ public class FightBot : ActivityHandler
             return false;
         }
     
-        
+        private IMessageActivity CreateUserStatusCard(UserProfile user){
+
+            var localusers = new List<CardAction>();
+
+            var foodsb = new StringBuilder(); 
+
+            var inv = user.Inventory;
+
+            foodsb.AppendLine(string.Format("{0}",user.Name));
+
+            foreach (var item in inv)
+            {
+                foodsb.AppendLine(string.Format("{0}",item.Name));
+            }
+
+            var card = new HeroCard
+                {
+                    Title = "Foodfite!",
+                    Text = foodsb.ToString(),
+                    Images = new List<CardImage>() { new CardImage("https://aka.ms/bf-welcome-card-image") },
+                    Buttons = new List<CardAction>()
+                                {
+                                    new CardAction(ActionTypes.ImBack, "Main Menu",  value: "MainMenu"),
+                                    new CardAction(ActionTypes.ImBack, "Exit",  value: "Exit"),
+                                }
+                };
+
+            return MessageFactory.Attachment(card.ToAttachment());
+        }
 
     }
 }
