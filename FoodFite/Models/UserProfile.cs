@@ -14,6 +14,7 @@ namespace FoodFite.Models
     {
         public string Name { get; set; }
         public string Opponent { get; set; }
+        public Protection FoundItem { get; set; }
         public Food Weapon { get; set; }
         public List<Item> Inventory { get; set;}
         public double Health { get; set;}

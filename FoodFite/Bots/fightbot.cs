@@ -104,7 +104,7 @@ namespace FoodFite.Bots
                         profile.addFood((Food)ItemFactory.RandomFoodFactory());
                         profile.addFood((Food)ItemFactory.RandomFoodFactory());
                         profile.addFood((Food)ItemFactory.RandomFoodFactory());
-                        profile.ChangeClothes((Protection)ItemFactory.RandomDefenseGearFactory());
+                        profile.Clothes = (Protection)ItemFactory.RandomDefenseGearFactory();
                         profile.Health = 100;
                         _cafeteria.addUser(profile, turnContext.Activity.GetConversationReference());
                         await turnContext.SendActivityAsync($"Hi {profile.Name}. You are currently armed with a {profile.Clothes.Name}", null, null, cancellationToken);
@@ -135,6 +135,26 @@ namespace FoodFite.Bots
                                     await turnContext.SendActivityAsync(SelectTargetQuestion(profile), cancellationToken);
                                     flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                                     break;
+                                case "go scavenging":
+                                    var item = ItemFactory.RandomItem();
+                                    await turnContext.SendActivityAsync($"You found a {item.Name}");
+
+                                    if(item.Throwable){
+                                        _cafeteria._users[profile.Name].addFood((Food)item);
+                                        await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
+                                        flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
+                                    } else if(_cafeteria._users[profile.Name].Clothes == null){
+                                        _cafeteria._users[profile.Name].Clothes = (Protection)item;
+                                        await turnContext.SendActivityAsync($"{item.Name} equipped.");
+                                        await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
+                                    } else {
+                                        await turnContext.SendActivityAsync($"You found a {item.Name} Health: {(int)((Protection)item).Health}");
+                                        _cafeteria._users[profile.Name].FoundItem = (Protection)item;
+                                        await turnContext.SendActivityAsync($"You have {_cafeteria._users[profile.Name].Clothes.Name} Health: {(int)_cafeteria._users[profile.Name].Clothes.Health} equipped.");
+                                        await turnContext.SendActivityAsync(EquipProtectionQuestion(), cancellationToken);
+                                        flow.LastQuestionAsked = ConversationFlow.Question.ChangeClothes;
+                                    }
+                                    break;
                                 case "check status":
                                     StateStatus(turnContext, profile, cancellationToken);
 
@@ -153,6 +173,37 @@ namespace FoodFite.Bots
                             await turnContext.SendActivityAsync(message ?? "You're in detention, no actions permitted.");
                             await turnContext.SendActivityAsync(ListRemainingPlayers(), cancellationToken);
                             flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        await turnContext.SendActivityAsync(message ?? "I'm sorry, I didn't understand that.", null, null, cancellationToken);
+                        break;
+                    }
+
+                case ConversationFlow.Question.ChangeClothes:
+                    if (ValidateName(input, out var answer, out message))
+                    {
+                        var user = _cafeteria._users[profile.Name];
+                        var item = user.FoundItem;
+                        user.FoundItem = null;
+                        switch(answer){
+                            case "Yes":
+                                user.Clothes = item;
+                                await turnContext.SendActivityAsync($"{item.Name} equipped.");
+                                await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
+                                        flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
+                                break;
+                            case "No":
+                                await turnContext.SendActivityAsync($"{item.Name} not equipped.");
+                                await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
+                                flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
+                                break;
+                            default:
+                                await turnContext.SendActivityAsync(message ?? "I'm sorry, I didn't understand that.", null, null, cancellationToken);
+                                break;
+
                         }
                         break;
                     }
@@ -183,10 +234,10 @@ namespace FoodFite.Bots
                 case ConversationFlow.Question.Weapon:
                     if (ValidateName(input, out var weapon, out message))
                     {
-                        profile.Weapon = profile.FoodMap[weapon];
-                        int damage = (int)(profile.ThrowFood(profile.FoodMap[weapon]));
-                        //we need to find a way to not attach the weapon to the profile, prevents multiple fights at once.
-                        await turnContext.SendActivityAsync($"You threw a {profile.Weapon.Name} at {profile.Opponent} and dealt {damage} damage!");
+                        var user = _cafeteria._users[profile.Name];
+                        user.Weapon = user.FoodMap[weapon];
+                        int damage = (int)(user.ThrowFood(user.FoodMap[weapon]));
+                        await turnContext.SendActivityAsync($"You threw a {user.Weapon.Name} at {profile.Opponent} and dealt {damage} damage!");
 
                         Queue<string> actionQueue;
                         if (!_cafeteria._actions.ContainsKey(profile.Opponent))
@@ -198,7 +249,7 @@ namespace FoodFite.Bots
                         {
                             actionQueue = _cafeteria._actions[profile.Opponent];
                         }
-                        actionQueue.Enqueue($"{profile.Name},{profile.Weapon.Name},{damage}");
+                        actionQueue.Enqueue($"{user.Name},{user.Weapon.Name},{damage}");
                         await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer, default(CancellationToken));
 
                         await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
@@ -253,11 +304,27 @@ namespace FoodFite.Bots
         {
             var actionButtons = new List<CardAction>();
             actionButtons.Add(new CardAction(ActionTypes.ImBack, "Throw Food", value: "Throw Food"));
+            actionButtons.Add(new CardAction(ActionTypes.ImBack, "Go Scavenging", value: "Go Scavenging"));
             actionButtons.Add(new CardAction(ActionTypes.ImBack, "Check Status", value: "Check Status"));
 
             var userCards = new HeroCard
             {
                 Title = "What action would you like to do?",
+                Buttons = actionButtons
+            };
+
+            return MessageFactory.Attachment(userCards.ToAttachment());
+        }
+
+        private IMessageActivity EquipProtectionQuestion()
+        {
+            var actionButtons = new List<CardAction>();
+            actionButtons.Add(new CardAction(ActionTypes.ImBack, "Yes", value: "Yes"));
+            actionButtons.Add(new CardAction(ActionTypes.ImBack, "No", value: "No"));
+
+            var userCards = new HeroCard
+            {
+                Title = "Would you like to equip it?",
                 Buttons = actionButtons
             };
 
@@ -288,7 +355,7 @@ namespace FoodFite.Bots
         private IMessageActivity SelectWeaponQuestion(UserProfile profile)
         {
             var buttons = new List<CardAction>();
-            foreach (var item in profile.FoodMap)
+            foreach (var item in _cafeteria._users[profile.Name].FoodMap)
             {
                 var action = new CardAction(ActionTypes.ImBack, $"{item.Key}: {item.Value.Ammo} left", value: item.Key);
                 buttons.Add(action);

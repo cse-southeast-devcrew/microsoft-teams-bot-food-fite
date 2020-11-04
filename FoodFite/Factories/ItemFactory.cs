@@ -47,6 +47,12 @@ namespace FoodFite.Factories
         public static Item RaincoatFactory() {
             return new Protection("Raincoat", 35,30,10);
         }
+
+        public static Item RandomItem(){
+            var r = new Random();
+            return (r.Next(5) == 1) ? RandomDefenseGearFactory() : RandomFoodFactory();
+        }
+
         public static Item RandomDefenseGearFactory() {
             var random = new Random();
             int index = random.Next(defenseGearList.Count);

@@ -9,6 +9,7 @@ namespace FoodFite.Models
             Weapon,
             Action,
             ActionRouting,
+            ChangeClothes,
             Back,
             None, // Our last action did not involve a question.
         }
