@@ -35,9 +35,9 @@ namespace FoodFite.Services
                 Container container = await CosmosHelper.GetContainerAsync(_client, _databaseId, _containerId);
                 stateItemResponse = await container.UpsertItemAsync<T>(item: stateItem, partitionKey: new PartitionKey(stateItem.Id));
             }
-            catch (System.Exception up)
+            catch (Exception up)
             {
-                throw up;
+                throw up; // TODO: May want to do something better here...
             }
 
             return stateItemResponse;
@@ -52,7 +52,7 @@ namespace FoodFite.Services
                 Container container = await CosmosHelper.GetContainerAsync(_client, _databaseId, _containerId);
                 stateItemResponse = await container.ReadItemAsync<T>(id: stateItem.Id, partitionKey: new PartitionKey(stateItem.Id));
             }
-            catch (System.Exception up)
+            catch
             {
                 // TODO: Log this as exception or user doesn't exist
             }
