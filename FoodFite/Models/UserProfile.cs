@@ -64,8 +64,6 @@ namespace FoodFite.Models
             
             if (Clothes != null){
                 if(Clothes.isBroken()){
-                    int index = Inventory.FindIndex(item => item.Name == Clothes.Name);
-                    Inventory.RemoveAt(index);
                     Clothes = null;
                 }
             }
