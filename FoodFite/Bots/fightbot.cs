@@ -15,6 +15,7 @@ using Microsoft.Recognizers.Text.DateTime;
 using Microsoft.Recognizers.Text.Number;
 using FoodFite.Models;
 using FoodFite.Factories;
+using System.Text;
 
 namespace FoodFite.Bots
 {
@@ -52,18 +53,7 @@ namespace FoodFite.Bots
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
-                    var welcomeCard = new HeroCard
-                    {
-                        Text = WelcomeMessage,
-                        Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/food-fight-blog.jpg") },
-                        Buttons = new List<CardAction>()
-                            {
-                                new CardAction(ActionTypes.ImBack, "Fight!",  value: "Fight!"),
-                            }
-                    };
-
-                    var welcomeResponse = MessageFactory.Attachment(welcomeCard.ToAttachment());
-                    await turnContext.SendActivityAsync(welcomeResponse, cancellationToken);
+                    await turnContext.SendActivityAsync(CreateWelcomeCard(), cancellationToken);
                 }
             }
         }
@@ -107,7 +97,8 @@ namespace FoodFite.Bots
                         profile.ChangeClothes((Protection)ItemFactory.RandomDefenseGearFactory());
                         profile.Health = 100;
                         _cafeteria.addUser(profile, turnContext.Activity.GetConversationReference());
-                        await turnContext.SendActivityAsync($"Hi {profile.Name}. You are currently armed with a {profile.Clothes.Name}", null, null, cancellationToken);
+
+                        await turnContext.SendActivityAsync(CreateUserStatusCard(profile), cancellationToken);
 
                         await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
                         flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
@@ -136,8 +127,7 @@ namespace FoodFite.Bots
                                     flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                                     break;
                                 case "check status":
-                                    StateStatus(turnContext, profile, cancellationToken);
-
+                                    await turnContext.SendActivityAsync(CreateUserStatusCard(profile), cancellationToken);
                                     await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
                                     flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
                                     break;
@@ -186,7 +176,7 @@ namespace FoodFite.Bots
                         profile.Weapon = profile.FoodMap[weapon];
                         int damage = (int)(profile.ThrowFood(profile.FoodMap[weapon]));
                         //we need to find a way to not attach the weapon to the profile, prevents multiple fights at once.
-                        await turnContext.SendActivityAsync($"You threw a {profile.Weapon.Name} at {profile.Opponent} and dealt {damage} damage!");
+                        await turnContext.SendActivityAsync(CreateAttackCard(profile,damage), cancellationToken);
 
                         Queue<string> actionQueue;
                         if (!_cafeteria._actions.ContainsKey(profile.Opponent))
@@ -222,9 +212,9 @@ namespace FoodFite.Bots
             var food = message[1];
             var damage = double.Parse(message[2]);
             var taken = (int)(_cafeteria.GetUser(profile.Name).GetHit(damage));
-
-            await context.SendActivityAsync($"{player} threw {food} at you for {damage} damage. You take {taken} damage.");
-
+           
+            await context.SendActivityAsync( CreateActionCard(player, food, damage ,taken));
+            
             if (_cafeteria.GetUser(profile.Name).Health <= 0)
             {
                 _cafeteria._users.Remove(profile.Name);
@@ -279,6 +269,7 @@ namespace FoodFite.Bots
             var userCard = new HeroCard
             {
                 Title = "Who is your target?",
+                Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/DglSZFvVQAAGNYU.jpg") },
                 Buttons = buttons
             };
 
@@ -297,6 +288,7 @@ namespace FoodFite.Bots
             var weaponcard = new HeroCard
             {
                 Title = "Choose your weapon",
+                Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/fortnite-back-bling-deep-fried.jpg") },
                 Buttons = buttons
             };
 
@@ -329,5 +321,86 @@ namespace FoodFite.Bots
 
             return message is null;
         }
+    
+        private IMessageActivity CreateUserStatusCard(UserProfile user){
+
+            var localusers = new List<CardAction>();
+
+            var foodsb = new StringBuilder(); 
+
+            var foods = user.ListFood();
+
+            foodsb.AppendLine(string.Format("Hi {0}",user.Name));
+            foodsb.Append(Environment.NewLine);
+
+            foodsb.AppendLine(string.Format("Your current health is {0}", user.Health));
+            foodsb.Append(Environment.NewLine);
+
+            if (user.Clothes != null)
+            {
+                foodsb.AppendLine(string.Format("You are wearing {0} with a current health of {1}", user.Clothes.Name,user.Clothes.Health));
+                foodsb.Append(Environment.NewLine);
+            }
+            
+            foodsb.AppendLine("You have the following food items:");
+            foodsb.Append(Environment.NewLine);
+            
+            foreach (var item in foods)
+            {
+                var x = user.FoodMap[item.Name];
+                foodsb.AppendLine(string.Format("Food:{0} - Ammo:{1}",x.Name,x.Ammo));
+                foodsb.Append(Environment.NewLine);
+            }
+
+            var card = new HeroCard
+                {
+                    //Title = "Foodfite!",
+                    Text = foodsb.ToString(),
+                    Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/3c6fd7398291137c435bafeff11bba421c39b99er1-586-426v2_hq.jpg") },
+                };
+
+            return MessageFactory.Attachment(card.ToAttachment());
+        }
+
+        private IMessageActivity CreateActionCard(string player, string food,  double damage , int taken){
+
+            var card = new HeroCard
+                {
+                    //Title = "Foodfite!",
+                    Text =  $"{player} threw {food} at you for {damage} damage. You take {taken} damage.",
+                    Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/bebcf1768a0993c38582c18acdb3628d.jpg") },
+                };
+
+            return MessageFactory.Attachment(card.ToAttachment());
+        }
+
+                private IMessageActivity CreateAttackCard(UserProfile user, int damage){
+
+            var card = new HeroCard
+                {
+                    //Title = "Foodfite!",
+                    Text =  $"You threw a {user.Weapon.Name} at {user.Opponent} and dealt {damage} damage!",
+                    Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/FortniteBattleRoyaleTomatohead.jpg") },
+                };
+
+            return MessageFactory.Attachment(card.ToAttachment());
+        }
+
+        private IMessageActivity CreateWelcomeCard(){
+            
+            var welcomeCard = new HeroCard
+                    {
+                        Text = WelcomeMessage,
+                        Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/666081.jpg") },
+                        Buttons = new List<CardAction>()
+                            {
+                                new CardAction(ActionTypes.ImBack, "Fight!",  value: "Fight!"),
+                            }
+                    };
+
+            return MessageFactory.Attachment(welcomeCard.ToAttachment());
+        
+        }
+
     }
 }
