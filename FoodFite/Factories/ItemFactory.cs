@@ -6,46 +6,69 @@ namespace FoodFite.Factories
     using FoodFite.Models;
     public class ItemFactory
     {
-
-        private static List<Item> foodList = 
-            new List<Item>{JelloFactory(), BananaFactory(), GrapeFactory(), PizzaFactory()};
-
-        private static List<Item> defenseGearList = 
-            new List<Item>{TrashCanLidFactory(), WhiteTeeShirtFactory(), TrayFactory(), RaincoatFactory()};
-
-        public static Item JelloFactory() {
-            return new Food("Jello",60,0,100,2);
+        public interface IItemFactory {
+            Item create();
+        }
+        
+        public class JelloFactory : IItemFactory {
+            public Item create() {
+                return new Food("Jello",60,0,100,2);
+            }
         }
 
-        public static Item BananaFactory() {
-            return new Food("Banana",40,30,70,5);
+        public class BananaFactory : IItemFactory {
+            public Item create() {
+                return new Food("Banana",40,30,70,5);
+            }
         }
 
-        public static Item GrapeFactory() {
-            return new Food("Grape",20,60,60,10);
+        public class PizzaFactory : IItemFactory {
+            public Item create() {
+                return new Food("Pizza",30,50,60,2);
+            }
         }
 
-        public static Item PizzaFactory() {
-            return new Food("Pizza",30,50,60,2);
+        public class GrapeFactory : IItemFactory {
+            public Item create() {
+                return new Food("Grape",20,60,60,10);
+            }
         }
+
+        public class TrashCanLidFactory : IItemFactory {
+            public Item create() {
+                return new Protection("Trash Can Lid", 20,0,50);
+            }
+        }
+
+        public class RaincoatFactory : IItemFactory {
+            public Item create() {
+                return new Protection("Raincoat", 35,30,10);
+            }
+        }
+
+        public class WhiteTeeShirtFactory : IItemFactory {
+            public Item create() {
+                return new Protection("White Tee Shirt", 10,5,20);
+            }
+        }
+
+        public class TrayFactory : IItemFactory {
+            public Item create() {
+                return new Protection("Tray", 20,0,30);
+            }
+        }
+        
+        private static List<IItemFactory> foodList = 
+            new List<IItemFactory>{new JelloFactory(), new BananaFactory(), new GrapeFactory(), new PizzaFactory()};
+
+        private static List<IItemFactory> defenseGearList = 
+            new List<IItemFactory>{new TrashCanLidFactory(), new WhiteTeeShirtFactory(), new TrayFactory(), new RaincoatFactory()};
+
 
         public static Item RandomFoodFactory() {
             var random = new Random();
             int index = random.Next(foodList.Count);
-            return foodList[index];
-        }
-
-        public static Item TrashCanLidFactory() {
-            return new Protection("Trash Can Lid", 20,0,50);
-        }
-        public static Item WhiteTeeShirtFactory() {
-            return new Protection("White Tee Shirt", 10,5,20);
-        }
-        public static Item TrayFactory() {
-            return new Protection("Tray", 20,0,30);
-        }
-        public static Item RaincoatFactory() {
-            return new Protection("Raincoat", 35,30,10);
+            return foodList[index].create();
         }
 
         public static Item RandomItem(){
@@ -56,7 +79,7 @@ namespace FoodFite.Factories
         public static Item RandomDefenseGearFactory() {
             var random = new Random();
             int index = random.Next(defenseGearList.Count);
-            return defenseGearList[index];
+            return defenseGearList[index].create();
         }
     }
 }
