@@ -13,6 +13,7 @@ namespace FoodFite.Dialogs
     using System.Globalization;
     using System.Linq;
     using System.Collections.Generic;
+    using FoodFite.Utils;
 
     class CafeteriaSetupDialog : ComponentDialog
     {
@@ -108,12 +109,10 @@ namespace FoodFite.Dialogs
             cafeteria.WhenMoneyIsPaid = when;
             cafeteria.Players = new List<UserProfile>();
 
-            await stepContext.Context.SendActivityAsync(
-                MessageFactory.Text("Thanks for participating!"),
-                cancellationToken);
+            await stepContext.Context.SendActivityAsync(CommandCards.CreateHelpCommandCard(), cancellationToken);
 
             await _stateProvider.UpsertAsync(cafeteria);
-            return await stepContext.EndDialogAsync(stepContext.Values[CAFETERIA_INFO], cancellationToken);
+            return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
     }
 }

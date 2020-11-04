@@ -12,6 +12,7 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using FoodFite.Services;
 using Microsoft.Extensions.Configuration;
+using System.Linq;
 
 namespace FoodFite.Bots
 {
@@ -50,28 +51,27 @@ namespace FoodFite.Bots
 
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
-            UserProfile userProfile = new UserProfile();
-
-            foreach (var member in membersAdded)
-            {
-                if (member.Id != turnContext.Activity.Recipient.Id)
-                {
-                    userProfile.Id = member.Id;
-                    userProfile.Name = member.Name;
-                    userProfile.ConversationReference = turnContext.Activity.GetConversationReference();;
-                }
-            }
-
+            ChannelAccount member = membersAdded.Where<ChannelAccount>(m => m.Id != turnContext.Activity.Recipient.Id).First();
             StateProvider<UserProfile> stateProvider = new StateProvider<UserProfile>(_configuration);
-            var existingUserProfile = await stateProvider.ReadByIdAsync(userProfile.Id);
+            var existingUserProfile = await stateProvider.ReadByIdAsync(member.Id);
 
             if (existingUserProfile != null)
             {
-                var reply = MessageFactory.Text($"Welcome back to the Food Fite Bot {userProfile.Name}. Type a command or \"help\" to get started.");
+                UserProfile user = (UserProfile)existingUserProfile;
+                var reply = MessageFactory.Text($"Welcome back to the Food Fite Bot {user.Name}. Type a command or \"help\" to get started.");
                 await turnContext.SendActivityAsync(reply, cancellationToken);
             }
             else
             {
+                UserProfile userProfile = new UserProfile();
+                userProfile.Id = member.Id;
+                userProfile.ConversationReference = turnContext.Activity.GetConversationReference();
+
+                if (userProfile.ConversationReference.ChannelId == "emulator")
+                    userProfile.Name = member.Name + member.Id.Substring(0,4);
+                else
+                    userProfile.Name = member.Name;
+
                 userProfile.Stains = 10; // TODO: Need to set this differently?
                 await stateProvider.UpsertAsync(userProfile); // TODO: Handle this better
                 var reply = MessageFactory.Text($"Welcome to the Food Fite Bot {userProfile.Name}. Type a command or \"help\" to get started.");

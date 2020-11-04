@@ -36,6 +36,7 @@ namespace FoodFite.Dialogs
 
         private async Task<DialogTurnResult> EnterCafeteriaAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            // TODO: Handle no cafeteria...
             var cafeterias = await _cafeteriaStateProvider.ReadAllAsync();
 
             StringBuilder sb = new StringBuilder();
@@ -49,8 +50,14 @@ namespace FoodFite.Dialogs
         private async Task<DialogTurnResult> AckAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var result = (string)stepContext.Result;
-            Cafeteria cafeteria = await _cafeteriaStateProvider.ReadByIdAsync(result);
-            UserProfile user = await _userStateProvider.ReadByIdAsync(stepContext.Context.Activity.From.Id);
+
+            var cafeteriaResult = await _cafeteriaStateProvider.ReadByIdAsync(result);
+            if (cafeteriaResult == null) return await stepContext.EndDialogAsync(cancellationToken: cancellationToken); // TODO: Send error message
+            Cafeteria cafeteria = (Cafeteria)cafeteriaResult;
+
+            var userResult = await _userStateProvider.ReadByIdAsync(stepContext.Context.Activity.From.Id);
+            if (userResult == null) return await stepContext.EndDialogAsync(cancellationToken: cancellationToken); // TODO: Send error message
+            UserProfile user = (UserProfile)userResult;
 
             if (cafeteria.Id == user.CafeteriaId)
             {
@@ -66,7 +73,8 @@ namespace FoodFite.Dialogs
                 {
                     // TODO: Cosmos isn't transactional and this should be...
                     Cafeteria existingCafeteria = await _cafeteriaStateProvider.ReadByIdAsync(user.CafeteriaId);
-                    existingCafeteria.Players.Remove(user);
+                    var itemToRemove = existingCafeteria.Players.Single(u => u.Id == user.Id);
+                    existingCafeteria.Players.Remove(itemToRemove);
                     await _cafeteriaStateProvider.UpsertAsync(existingCafeteria);
                 }
             }
