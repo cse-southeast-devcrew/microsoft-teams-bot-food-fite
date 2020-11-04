@@ -73,7 +73,7 @@ namespace FoodFite.Bots
             }
             else
             {
-                userProfile.Stains = 10; // Need to set this differently
+                userProfile.Stains = 10; // TODO: Need to set this differently?
                 await stateProvider.UpsertAsync(userProfile); // TODO: Handle this better
                 var reply = MessageFactory.Text($"Welcome to the Food Fite Bot {userProfile.Name}. Type a command or \"help\" to get started.");
                 await turnContext.SendActivityAsync(reply, cancellationToken);

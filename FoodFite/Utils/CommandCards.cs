@@ -15,6 +15,9 @@ namespace FoodFite.Utils
                 {
                     new CardAction { Title = "Create Cafeteria", Type = ActionTypes.ImBack, Value = "create cafeteria" },
                     new CardAction { Title = "Show my Stats", Type = ActionTypes.ImBack, Value = "stats" },
+                    new CardAction { Title = "Enter Cafeteria", Type = ActionTypes.ImBack, Value = "enter cafeteria" },
+                    new CardAction { Title = "Start a Fite", Type = ActionTypes.ImBack, Value = "fite" },
+                    new CardAction { Title = "Show Leaderboard", Type = ActionTypes.ImBack, Value = "leaderboard" },
                 },
             };
 
