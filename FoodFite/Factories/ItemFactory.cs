@@ -10,7 +10,7 @@ namespace FoodFite.Factories
         private static List<Item> foodList = 
             new List<Item>{JelloFactory(), BananaFactory(), GrapeFactory(), PizzaFactory()};
 
-        private static List<Item> defenseGearList = 
+        public static List<Item> defenseGearList = 
             new List<Item>{TrashCanLidFactory(), WhiteTeeShirtFactory(), TrayFactory(), RaincoatFactory()};
 
         public static Item JelloFactory() {

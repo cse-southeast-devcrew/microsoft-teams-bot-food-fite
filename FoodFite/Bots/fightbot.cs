@@ -71,6 +71,9 @@ namespace FoodFite.Bots
             await FillOutUserProfileAsync(flow, profile, turnContext, cancellationToken);
 
             // Save changes.
+            if (profile.Name != null){
+                _cafeteria._users[profile.Name] = profile;
+            }
             await _conversationState.SaveChangesAsync(turnContext, false, cancellationToken);
             await _userState.SaveChangesAsync(turnContext, false, cancellationToken);
         }
@@ -126,6 +129,10 @@ namespace FoodFite.Bots
                                     await turnContext.SendActivityAsync(SelectTargetQuestion(profile), cancellationToken);
                                     flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                                     break;
+                                case "change protective gear":
+                                    await turnContext.SendActivityAsync(SelectGearQuestion(profile), cancellationToken);
+                                    flow.LastQuestionAsked = ConversationFlow.Question.Gear;
+                                    break;
                                 case "check status":
                                     await turnContext.SendActivityAsync(CreateUserStatusCard(profile), cancellationToken);
                                     await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
@@ -162,6 +169,25 @@ namespace FoodFite.Bots
                         await turnContext.SendActivityAsync(SelectWeaponQuestion(profile), cancellationToken);
 
                         flow.LastQuestionAsked = ConversationFlow.Question.Weapon;
+                        break;
+                    }
+                    else
+                    {
+                        await turnContext.SendActivityAsync(message ?? "I'm sorry, I didn't understand that.", null, null, cancellationToken);
+                        break;
+                    }
+
+                case ConversationFlow.Question.Gear:
+                    if (ValidateName(input, out var gear, out message))
+                    {
+                        foreach(Item item in ItemFactory.defenseGearList){
+                            if (item.Name == gear){
+                                profile.ChangeClothes((Protection)item);
+                                break;
+                            }
+                        }
+                        await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
+                        flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
                         break;
                     }
                     else
@@ -243,6 +269,7 @@ namespace FoodFite.Bots
         {
             var actionButtons = new List<CardAction>();
             actionButtons.Add(new CardAction(ActionTypes.ImBack, "Throw Food", value: "Throw Food"));
+            actionButtons.Add(new CardAction(ActionTypes.ImBack, "Change Protective Gear", value: "Change Protective Gear"));
             actionButtons.Add(new CardAction(ActionTypes.ImBack, "Check Status", value: "Check Status"));
 
             var userCards = new HeroCard
@@ -293,6 +320,24 @@ namespace FoodFite.Bots
             };
 
             return MessageFactory.Attachment(weaponcard.ToAttachment());
+        }
+
+        private IMessageActivity SelectGearQuestion(UserProfile profile)
+        {
+            var buttons = new List<CardAction>();
+            foreach (var item in ItemFactory.defenseGearList)
+            {
+                var action = new CardAction(ActionTypes.ImBack, item.Name, value: item.Name);
+                buttons.Add(action);
+            }
+
+            var gearcard = new HeroCard
+            {
+                Title = "Choose your protective gear",
+                Buttons = buttons
+            };
+
+            return MessageFactory.Attachment(gearcard.ToAttachment());
         }
 
         private async void StateStatus(ITurnContext turnContext, UserProfile user, CancellationToken cancellationToken)
