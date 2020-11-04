@@ -11,6 +11,7 @@ using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Connector;
 using Microsoft.Bot.Schema;
 using FoodFite.Models;
+using Microsoft.Bot.Builder.Teams;
 
 namespace FoodFite.Dialogs
 {
@@ -42,8 +43,17 @@ namespace FoodFite.Dialogs
 
         private static async Task<DialogTurnResult> NameStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)//stepContext contains value from previous 'TransposrtStepAsync'
         {
+            var member = await TeamsInfo.GetMemberAsync(turnContext, turnContext.Activity.From.Id, cancellationToken);
 
-            return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = MessageFactory.Text("Please enter your name.") }, cancellationToken);
+            if (member.Name != null)
+            {
+                var reply = MessageFactory.Text($"Hello {member.Name}");
+                await turnContext.SendActivityAsync(reply, cancellationToken);
+            }
+            else
+            {
+                return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = MessageFactory.Text("Please enter your name.") }, cancellationToken);
+            }
         }
 
         private async Task<DialogTurnResult> NameConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
