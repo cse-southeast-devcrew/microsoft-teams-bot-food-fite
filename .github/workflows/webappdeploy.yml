@@ -1,0 +1,47 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ main ]
+
+
+env:
+  AZURE_WEBAPP_NAME: FoodFiteBot    # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: './FoodFite'      # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '3.1.x'           # set this to the dot net version to use
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repo
+      - uses: actions/checkout@master
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      
+      # Setup .NET Core SDK
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }} 
+      
+      # Run dotnet build and publish
+      - name: dotnet build and publish
+        run: |
+          dotnet restore FoodFite
+          dotnet build FoodFite --configuration Release
+          dotnet publish FoodFite -c Release -o '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/FoodFite' 
+          
+      # Deploy to Azure Web apps
+      - name: 'Run Azure webapp deploy action'
+        uses: azure/webapps-deploy@v2
+        with: 
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/FoodFite'
+      
+      - name: logout
+        run: |
+          az logout
