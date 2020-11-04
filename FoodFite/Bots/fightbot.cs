@@ -124,6 +124,7 @@ public class FightBot : ActivityHandler
 
                         var fightresponse = MessageFactory.Attachment(userCards.ToAttachment());
                         await turnContext.SendActivityAsync(fightresponse, cancellationToken);
+
                         flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                         break;
                     }
@@ -322,18 +323,21 @@ public class FightBot : ActivityHandler
 
             var inv = user.Inventory;
 
-            foodsb.AppendLine(string.Format("{0}",user.Name));
+            foodsb.AppendLine(string.Format("Name: {0} ",user.Name));
+            foodsb.Append(Environment.NewLine);
 
             foreach (var item in inv)
             {
-                foodsb.AppendLine(string.Format("{0}",item.Name));
+                var x = user.FoodMap[item.Name];
+                foodsb.AppendLine(string.Format("Food:{0} - Ammo{1}",x.Name,x.Ammo));
+                foodsb.Append(Environment.NewLine);
             }
 
             var card = new HeroCard
                 {
-                    Title = "Foodfite!",
+                    //Title = "Foodfite!",
                     Text = foodsb.ToString(),
-                    Images = new List<CardImage>() { new CardImage("https://aka.ms/bf-welcome-card-image") },
+                    Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/3c6fd7398291137c435bafeff11bba421c39b99er1-586-426v2_hq.jpg") },
                     Buttons = new List<CardAction>()
                                 {
                                     new CardAction(ActionTypes.ImBack, "Main Menu",  value: "MainMenu"),
