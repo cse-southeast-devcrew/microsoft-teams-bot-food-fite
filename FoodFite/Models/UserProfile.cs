@@ -31,17 +31,17 @@ namespace FoodFite.Models
         }
 
         public List<Item> ListProtection(){
-            List<Item> list = Inventory.Where(x => x.Throwable == false).ToList<Item>();
-            list.Add(Clothes);
-            return list;
+            return Inventory.Where(x => x.Throwable == false).ToList<Item>();
         }
 
         public void ChangeClothes(Protection newClothes){
-            Protection oldClothes = Clothes;
-            Inventory.Remove(newClothes);
-            Clothes = newClothes;
-            if(oldClothes != null){
-                Inventory.Add(oldClothes);
+            if(newClothes != null){
+                if (Clothes != null){
+                    int index = Inventory.FindIndex(item => item.Name == Clothes.Name);
+                    Inventory.RemoveAt(index);
+                }
+                Clothes = newClothes;
+                Inventory.Add(newClothes);
             }
         }
 
@@ -49,7 +49,9 @@ namespace FoodFite.Models
             double damage = food.Attack(0);
 
             if(!food.hasAmmo()){
-                Inventory.Remove(food);
+                int index = Inventory.FindIndex(item => item.Name == food.Name);
+                Inventory.RemoveAt(index);
+                FoodMap.Remove(food.Name);
             }
             
             return target.GetHit(damage);
@@ -57,10 +59,14 @@ namespace FoodFite.Models
 
         public double GetHit(double damage){
             
-            double damageDone = (Clothes == null) ? damage : Clothes.TakeDamage(damage, 0);
+            double damageDone = (Clothes == null) ? damage : damage - Clothes.TakeDamage(damage, 0);
             
-            if(Clothes != null && Clothes.isBroken()){
-                Clothes = null;
+            if (Clothes != null){
+                if(Clothes.isBroken()){
+                    int index = Inventory.FindIndex(item => item.Name == Clothes.Name);
+                    Inventory.RemoveAt(index);
+                    Clothes = null;
+                }
             }
 
             Health -= damageDone;
@@ -70,14 +76,11 @@ namespace FoodFite.Models
 
         public void addFood(Food food) {
             if(FoodMap.ContainsKey(food.Name)) {
-                Food mergedFood = FoodMap[food.Name];
-                mergedFood.Ammo = mergedFood.Ammo + food.Ammo;
+                FoodMap[food.Name].Ammo += food.Ammo;
             } else {
                 Inventory.Add(food);
                 FoodMap.Add(food.Name, food);
             }
         }
-
-
     }
 }
