@@ -16,6 +16,7 @@ using Microsoft.Recognizers.Text.Number;
 using FoodFite.Models;
 using FoodFite.Factories;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace FoodFite.Bots
 {
@@ -39,14 +40,16 @@ namespace FoodFite.Bots
 
 
 
-        public FightBot(ConversationState conversationState, UserState userState, Cafeteria cafeteria, IBotFrameworkHttpAdapter adapter)
+        public FightBot(ConversationState conversationState, UserState userState, Cafeteria cafeteria, IBotFrameworkHttpAdapter adapter, IConfiguration configuration)
         {
             _conversationState = conversationState;
             _userState = userState;
             _cafeteria = cafeteria;
             _adapter = adapter;
+            Configuration = configuration;
         }
 
+        public IConfiguration Configuration { get; }
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
             foreach (var member in membersAdded)
@@ -246,7 +249,7 @@ namespace FoodFite.Bots
                             actionQueue = _cafeteria._actions[profile.Opponent];
                         }
                         actionQueue.Enqueue($"{user.Name},{user.Weapon.Name},{damage}");
-                        await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer, default(CancellationToken));
+                        await ((BotAdapter)_adapter).ContinueConversationAsync(Configuration.GetValue<string>("MicrosoftAppId"), _cafeteria._conversation[profile.Opponent], notifyPlayer, default(CancellationToken));
 
                         await turnContext.SendActivityAsync(ActionQuestion(), cancellationToken);
                         flow.LastQuestionAsked = ConversationFlow.Question.ActionRouting;
