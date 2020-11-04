@@ -90,3 +90,7 @@ Another option is to use the [Azure CLI](https://docs.microsoft.com/en-us/cli/az
 There is a GitHub Action workflow that enables continuous deployment to an Azure Web App. This file is at `.github/workflows/webappdeploy.yml`.
 
 A service prinicpal needs to be created and stored in GitHub Secrets. Follow the [guidelines here](https://docs.microsoft.com/en-us/azure/app-service/deploy-github-actions?tabs=userlevel#generate-deployment-credentials).
+
+## How to access the Bot in Microsoft Teams
+
+Follow the guidelines to [Connect a Bot to Microsoft Teams](https://docs.microsoft.com/en-us/azure/bot-service/channel-connect-teams?view=azure-bot-service-4.0#:~:text=To%20add%20the%20Microsoft%20Teams,Get%20bot%20embed%20code%20dialog.).
