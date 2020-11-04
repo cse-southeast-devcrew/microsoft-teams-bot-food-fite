@@ -59,7 +59,7 @@ namespace FoodFite
             // Create the Conversation state. (Used by the Dialog system itself.) ; DialogBot.cs
             services.AddSingleton<ConversationState>();
 
-            var botType = "fitebot";
+            var botType = Environment.GetEnvironmentVariable("BOT_TYPE");
 
             switch (botType.ToLower())
             {
