@@ -72,6 +72,8 @@ After running the program locally, the url that the bot is running at will be ou
 
 You can also grab the url from the Web App in Azure to test live.
 
+*Note: You will need to open multiple chats to enable a fight.
+
 ## How to manually deploy to Azure Web App
 
 1. Open the project folder where the `.csproj` file is located.
