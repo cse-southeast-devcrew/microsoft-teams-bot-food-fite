@@ -29,6 +29,14 @@ public class FightBot : ActivityHandler
         private readonly Cafeteria _cafeteria;
 
         private readonly IBotFrameworkHttpAdapter _adapter;
+
+                // Messages sent to the user.
+        private const string WelcomeMessage = "Hack project to build a " +
+                                              "multiplayer game inspired " +
+                                              "by the Food Fight game from " +
+                                              "the days of old";
+
+     
         
         public FightBot(ConversationState conversationState, UserState userState, Cafeteria cafeteria, IBotFrameworkHttpAdapter adapter)
         {
@@ -36,6 +44,28 @@ public class FightBot : ActivityHandler
             _userState = userState;
             _cafeteria = cafeteria;
             _adapter = adapter;
+        }
+
+        protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
+        {
+            foreach (var member in membersAdded)
+            {
+                if (member.Id != turnContext.Activity.Recipient.Id)
+                {
+                    var welcomeCard = new HeroCard
+                        {
+                            Text = WelcomeMessage,
+                            Images = new List<CardImage>() { new CardImage("https://foodfiteblobstorage.blob.core.windows.net/pictures/food-fight-blog.jpg") },
+                            Buttons = new List<CardAction>()
+                            {
+                                new CardAction(ActionTypes.ImBack, "Fight!",  value: "Fight!"),
+                            }
+                        };
+
+                    var welcomeResponse = MessageFactory.Attachment(welcomeCard.ToAttachment());
+                    await turnContext.SendActivityAsync(welcomeResponse, cancellationToken);
+                }
+            }
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
@@ -78,9 +108,9 @@ public class FightBot : ActivityHandler
                         await turnContext.SendActivityAsync($"Hi {profile.Name}. You are currently armed with a {profile.Clothes.Name}", null, null, cancellationToken);
 
                         var buttons = new List<CardAction>();
-                        foreach(string username in _cafeteria._users) {
-                            if(username != profile.Name) {
-                                var action = new CardAction(ActionTypes.ImBack, username, value: username);
+                        foreach(UserProfile username in _cafeteria._users) {
+                            if(username.Name != profile.Name) {
+                                var action = new CardAction(ActionTypes.ImBack, username.Name, value: username.Name);
                                 buttons.Add(action);
                             }
                         }
@@ -104,9 +134,9 @@ public class FightBot : ActivityHandler
                 case ConversationFlow.Question.Opponent:
                     if (ValidateName(input, out var opponent, out message))
                     {
-                        profile.Opponent = opponent;
+                        profile.Opponent = _cafeteria.GetUser(opponent);
                         //we need to find a way to not attach the opponent to the profile, prevents multiple fights at once.
-                        await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent}.", null, null, cancellationToken);
+                        await turnContext.SendActivityAsync($"I have your opponent as {profile.Opponent.Name}.", null, null, cancellationToken);
                         await turnContext.SendActivityAsync("Attack with?", null, null, cancellationToken);
                         
                         var buttons = new List<CardAction>();
@@ -136,25 +166,38 @@ public class FightBot : ActivityHandler
                 case ConversationFlow.Question.Weapon:
                     if (ValidateName(input, out var weapon, out message))
                     {
-                        profile.Weapon = weapon;
+                        profile.Weapon = profile.FoodMap[weapon];
+                        int damage = (int)(profile.ThrowFood(profile.FoodMap[weapon], profile.Opponent));
                         //we need to find a way to not attach the weapon to the profile, prevents multiple fights at once.
-                        await turnContext.SendActivityAsync($"You choose to attack {profile.Opponent}.");
-                        await turnContext.SendActivityAsync($"Using the {profile.Weapon}.");
-                        await turnContext.SendActivityAsync($"Type anything to run the bot again.");
+                        await turnContext.SendActivityAsync($"You threw a {profile.Weapon.Name} at {profile.Opponent.Name} and dealt {damage} damage!");
+                        
+                        var buttons = new List<CardAction>();
+                        foreach(UserProfile username in _cafeteria._users) {
+                            if(username.Name != profile.Name) {
+                                var action = new CardAction(ActionTypes.ImBack, username.Name, value: username.Name);
+                                buttons.Add(action);
+                            }
+                        }
+
+                        var userCards = new HeroCard
+                        {
+                            Title = "Whom do you wish to fight?",
+                            Buttons = buttons
+                        };
+                        var fightresponse = MessageFactory.Attachment(userCards.ToAttachment());
+                        await turnContext.SendActivityAsync(fightresponse, cancellationToken);
 
                         Queue<string> actionQueue;
-                        if(!_cafeteria._actions.ContainsKey(profile.Opponent)) {
+                        if(!_cafeteria._actions.ContainsKey(profile.Opponent.Name)) {
                             actionQueue = new Queue<string>();
-                            _cafeteria._actions.Add(profile.Opponent, actionQueue);
+                            _cafeteria._actions.Add(profile.Opponent.Name, actionQueue);
                         } else {
-                            actionQueue = _cafeteria._actions[profile.Opponent];
+                            actionQueue = _cafeteria._actions[profile.Opponent.Name];
                         }
-                        actionQueue.Enqueue("did some damage");
-                        await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent], notifyPlayer , default(CancellationToken));
-
-                        flow.LastQuestionAsked = ConversationFlow.Question.None;
+                        actionQueue.Enqueue($"{profile.Name} hit you with {profile.Weapon.Name} for {damage} damage!");
+                        await ((BotAdapter)_adapter).ContinueConversationAsync("asdf", _cafeteria._conversation[profile.Opponent.Name], notifyPlayer , default(CancellationToken));
                         
-                        profile = new UserProfile();
+                        flow.LastQuestionAsked = ConversationFlow.Question.Opponent;
                         break;
                     }
                     else
