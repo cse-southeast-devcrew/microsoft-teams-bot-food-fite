@@ -1,0 +1,18 @@
+{
+    "name": "FoodFite",
+    "description": "",
+    "services": [
+        {
+            "type": "endpoint",
+            "appId": "",
+            "appPassword": "",
+            "endpoint": "http://localhost:3978/api/messages",
+            "id": "c0e1fa30-1eae-11eb-96a7-5d0d584d5eff",
+            "name": "http://localhost:3978/api/messages"
+        }
+    ],
+    "padlock": "",
+    "version": "2.0",
+    "overrides": null,
+    "path": "/Users/ianphil/src/microsoft-teams-bot-food-fite/FoodFite.bot"
+}
