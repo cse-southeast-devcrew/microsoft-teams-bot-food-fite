@@ -4,9 +4,15 @@ namespace FoodFite.Dialogs
     using System.Threading.Tasks;
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Builder.Dialogs;
+    using Microsoft.Recognizers.Text.DateTime;
+    using Microsoft.Recognizers.Text.Number;
     using FoodFite.Models;
     using System;
     using FoodFite.Services;
+    using Microsoft.Recognizers.Text;
+    using System.Globalization;
+    using System.Linq;
+    using System.Collections.Generic;
 
     class CafeteriaSetupDialog : ComponentDialog
     {
@@ -58,32 +64,54 @@ namespace FoodFite.Dialogs
 
         private static async Task<DialogTurnResult> WhatTimeToPayAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            decimal lunchMoney = 1.25m;
             var cafeteria = (Cafeteria)stepContext.Values[CAFETERIA_INFO];
-            // TODO: Need to make NumberPrompt work with Decimal from LunchMoneyPerDayAsync
-            decimal result = Convert.ToDecimal(stepContext.Result);
-            cafeteria.AmountOfDailyLunchMoney = result;
 
-            var prompt = new PromptOptions { Prompt = MessageFactory.Text("What time do you want to pay lunch money?") };
+            var decimalResults = NumberRecognizer.RecognizeNumber((string)stepContext.Result, Culture.English);
+            if (decimalResults.Count > 0)
+            {
+                foreach (var result in decimalResults)
+                {
+                    if (result.Resolution.TryGetValue("value", out var value))
+                    {
+                        lunchMoney = Convert.ToDecimal(value, CultureInfo.InvariantCulture) + 0.00m;
+                    }
+                }
+            }
+            
+            cafeteria.AmountOfDailyLunchMoney = lunchMoney;
+
+            var prompt = new PromptOptions { Prompt = MessageFactory.Text("What time do you want to pay lunch money? example 12am") };
             return await stepContext.PromptAsync(nameof(TextPrompt), prompt, cancellationToken);
         }
 
         private async Task<DialogTurnResult> AcknowledgementAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            DateTime when = new DateTime(2020, 11, 3, 0, 0, 0);
             var cafeteria = (Cafeteria)stepContext.Values[CAFETERIA_INFO];
-            // TODO: DateTime Prompt in WhatTimeToPayAsync and convert to datetime here and model
-            cafeteria.WhenMoneyIsPaid = (string)stepContext.Result;
+
+            var dateTimeResults = DateTimeRecognizer.RecognizeDateTime((string)stepContext.Result, Culture.English);
+            if (dateTimeResults.Count <= 0 || !dateTimeResults.First().TypeName.StartsWith("datetimeV2"))
+            {
+                await stepContext.Context.SendActivityAsync("I'm sorry, that doesn't seem to be a valid delivery date and time. Please, try again");
+            }
+
+            var first = dateTimeResults.First();
+            var resolutionValues = (IList<Dictionary<string, string>>)first.Resolution["values"];
+            var subType = first.TypeName.Split('.').Last();
+
+            if (subType.Contains("time") && !subType.Contains("range"))
+            {
+                when = resolutionValues.Select(v => DateTime.Parse(v["value"])).FirstOrDefault();
+            }
+
+            cafeteria.WhenMoneyIsPaid = when;
 
             await stepContext.Context.SendActivityAsync(
                 MessageFactory.Text("Thanks for participating!"),
                 cancellationToken);
 
-            var result = await _stateProvider.UpsertAsync(cafeteria);
-
-            if (result == null)
-                throw new NullReferenceException("Something happened writing to database"); // TODO: do something different here
-
-            // TODO: I believe this returns the value bag to the parent dialog, next in waterfall. I think we could persist this to cosmos
-            // using the SDK (not bot state)? Should we use botstate? It's shared accross users so shouldn't be in user state.
+            await _stateProvider.UpsertAsync(cafeteria);
             return await stepContext.EndDialogAsync(stepContext.Values[CAFETERIA_INFO], cancellationToken);
         }
     }
