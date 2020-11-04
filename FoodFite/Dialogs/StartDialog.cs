@@ -20,6 +20,9 @@ namespace FoodFite.Dialogs
 
             AddDialog(new CafeteriaSetupDialog(new StateProvider<Cafeteria>(configuration)));
             AddDialog(new StatsDialog(new StateProvider<UserProfile>(configuration)));
+            AddDialog(new FiteDialog(new StateProvider<UserProfile>(configuration)));
+            AddDialog(new EnterCafeteriaDialog(new StateProvider<Cafeteria>(configuration)));
+            AddDialog(new LeaderboardDialog(new StateProvider<UserProfile>(configuration)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
                 InitialStateSetupAsync,
@@ -41,6 +44,12 @@ namespace FoodFite.Dialogs
                     return await stepContext.BeginDialogAsync(nameof(CafeteriaSetupDialog), null, cancellationToken);
                 case "stats":
                     return await stepContext.BeginDialogAsync(nameof(StatsDialog), null, cancellationToken);
+                case "leaderboard":
+                    return await stepContext.BeginDialogAsync(nameof(LeaderboardDialog), null, cancellationToken);
+                case "enter cafeteria":
+                    return await stepContext.BeginDialogAsync(nameof(EnterCafeteriaDialog), null, cancellationToken);
+                case "fite":
+                    return await stepContext.BeginDialogAsync(nameof(FiteDialog), null, cancellationToken);
                 default:
                     await stepContext.Context.SendActivityAsync(
                         MessageFactory.Text("Type **help** for a list of commands"),
