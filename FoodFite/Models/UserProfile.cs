@@ -14,6 +14,7 @@ namespace FoodFite.Models
     {
         public string Name { get; set; }
         public string Opponent { get; set; }
+        public Protection FoundItem { get; set; }
         public Food Weapon { get; set; }
         public List<Item> Inventory { get; set;}
         public double Health { get; set;}
@@ -63,8 +64,6 @@ namespace FoodFite.Models
             
             if (Clothes != null){
                 if(Clothes.isBroken()){
-                    int index = Inventory.FindIndex(item => item.Name == Clothes.Name);
-                    Inventory.RemoveAt(index);
                     Clothes = null;
                 }
             }
