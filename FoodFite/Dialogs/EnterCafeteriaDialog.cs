@@ -1,9 +1,7 @@
-
 namespace FoodFite.Dialogs
 {
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using FoodFite.Models;
@@ -11,7 +9,7 @@ namespace FoodFite.Dialogs
     using FoodFite.Utils;
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Builder.Dialogs;
-    using Microsoft.Bot.Builder.Dialogs.Choices;
+    using Microsoft.Bot.Schema;
 
     public class EnterCafeteriaDialog : ComponentDialog
     {
@@ -24,6 +22,7 @@ namespace FoodFite.Dialogs
             _userStateProvider = userStateProvider;
 
             AddDialog(new TextPrompt(nameof(TextPrompt)));
+            AddDialog(new AttachmentPrompt(nameof(AttachmentPrompt)));
             AddDialog(new ChoicePrompt(nameof(ChoicePrompt)));
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
@@ -39,11 +38,10 @@ namespace FoodFite.Dialogs
             // TODO: Handle no cafeteria...
             var cafeterias = await _cafeteriaStateProvider.ReadAllAsync();
 
-            StringBuilder sb = new StringBuilder();
-            sb.Append("Where do you want to eat?");
-            cafeterias.ForEach(c => { sb.Append($"\n\n* {c.Name} - Player Count {c.Players.Count}"); });
+            Activity reply = stepContext.Context.Activity.CreateReply();
+            reply.Attachments = new List<Attachment> { CommandCards.CreateEnterCafeteriaCommandCard(cafeterias) };
             
-            var prompt = new PromptOptions { Prompt = MessageFactory.Text(sb.ToString()) };
+            var prompt = new PromptOptions { Prompt = reply };
             return await stepContext.PromptAsync(nameof(TextPrompt), prompt, cancellationToken);
         }
 

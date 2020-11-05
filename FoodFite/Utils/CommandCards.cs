@@ -25,7 +25,7 @@ namespace FoodFite.Utils
             return MessageFactory.Attachment(helpCard.ToAttachment());
         }
 
-        public static IMessageActivity CreateEnterCafeteriaCommandCard(List<Cafeteria> cafeterias)
+        public static Attachment CreateEnterCafeteriaCommandCard(List<Cafeteria> cafeterias)
         {
             var helpCard = new HeroCard
             {
@@ -36,7 +36,7 @@ namespace FoodFite.Utils
             foreach (Cafeteria cafeteria in cafeterias)
                 helpCard.Buttons.Add(new CardAction { Title = cafeteria.Name, Type = ActionTypes.ImBack, Value = cafeteria.Id });
 
-            return MessageFactory.Attachment(helpCard.ToAttachment());
+            return helpCard.ToAttachment();
         }
     }
 }
